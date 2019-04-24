@@ -2,22 +2,36 @@
 local CM = ClickMog
 local f = CreateFrame("Frame")
 local VerifyFrame = CreateFrame("Frame")
+local ItemsCollection
 
 local active, unlocked
 local visualCache, catCache
 local startupTimer
+local startupUnlockTime
+local IsWardRobeSortLoaded
 
 local verifyIterations
 local needsModelUpdate
 local ScanningModel
+
+local weaponSlots = {
+	MAINHANDSLOT = true,
+	SECONDARYHANDSLOT = true,
+}
 
 function f:OnEvent(event, arg1)
 	if event == "ADDON_LOADED" and arg1 == "Blizzard_Collections" then
 		self:InitWardrobe()
 		self:UnregisterEvent(event)
 	elseif event == "TRANSMOG_COLLECTION_ITEM_UPDATE" then
-		startupTimer = 1.7
-		self:SetScript("OnUpdate", self.UnlockTimer)
+		if not unlocked then
+			startupTimer = .6
+			self:SetScript("OnUpdate", self.UnlockTimer)
+		end
+		if not IsWardRobeSortLoaded then
+			-- when mouse scrolling the tooltip waits for uncached item info and gets refreshed
+			self.UpdateMouseFocus()
+		end
 	end
 end
 
@@ -34,63 +48,64 @@ function f:InitWardrobe()
 	WardrobeCollectionFrame:HookScript("OnShow", function(frame)
 		if active then
 			-- needed when showing the wardrobe after the first time
-			self:UpdateModelCamera(WardrobeCollectionFrame.ItemsCollectionFrame)
+			self:UpdateModelCamera(ItemsCollection)
 			return
 		else
 			active = true
 		end
 		
+		ItemsCollection = WardrobeCollectionFrame.ItemsCollectionFrame
+		IsWardRobeSortLoaded = IsAddOnLoaded("WardRobeSort")
+		
 		-- LucidMorph item sets model
 		WardrobeCollectionFrame.SetsCollectionFrame.Model:HookScript("OnMouseUp", CM.MorphItemSet)
 		
 		-- LucidMorph item models
-		for _, model in pairs(WardrobeCollectionFrame.ItemsCollectionFrame.Models) do
+		for _, model in pairs(ItemsCollection.Models) do
 			model:HookScript("OnMouseUp", CM.MorphItem)
 		end
 		
 		ScanningModel = CreateFrame("DressUpModel")
 		ScanningModel:SetUnit("player")
 		
-		self:PlaceUnlockButton(self.UnlockWardrobe)
+		self:PlaceUnlockButton()
 	end)
 end
 
-function f:PlaceUnlockButton(func)
-	local btn = CreateFrame("Button", "ClickMogWardrobeButton", WardrobeCollectionFrame.ItemsCollectionFrame, "UIPanelButtonTemplate")
+function f:PlaceUnlockButton()
+	local btn = CreateFrame("Button", nil, ItemsCollection, "UIPanelButtonTemplate")
 	btn:SetPoint("TOPLEFT", WardrobeCollectionFrame.Tabs[1], "BOTTOMLEFT", -40, -55) -- topleft corner of the frame
 	btn:SetWidth(100)
 	btn:SetText(UNLOCK)
 	
 	btn:SetScript("OnClick", function(frame)
-		func(self)
-		if startupTimer and startupTimer > 0 then
-			CM:PrintChat("Already unlocking...")
-		end
+		startupUnlockTime = time()
+		self:UnlockWardrobe()
+		frame:Hide()
 	end)
 end
 
 function f:UnlockWardrobe()
 	if not unlocked then
-		unlocked = true
 		CM:PrintChat("Loading data...", "FFFFFF")
 		self:RegisterEvent("TRANSMOG_COLLECTION_ITEM_UPDATE")
 		self:GetAppearances()
+		self:HookWardrobe()
+		self:UpdateWardrobe() -- initial update before data is loaded
 	end
 end
 
 -- wait until all initial TRANSMOG_COLLECTION_ITEM_UPDATE events have fired
 function f:UnlockTimer(elapsed)
 	startupTimer = startupTimer - elapsed
-	if startupTimer < 0 then
+	-- between the first and second event there can be more than 2 seconds delay
+	if startupTimer < 0 and time() > startupUnlockTime + 4 then
 		self:SetScript("OnUpdate", nil)
-		self:UnregisterEvent("TRANSMOG_COLLECTION_ITEM_UPDATE")
+		unlocked = true
 		
-		self:HookWardrobe()
 		verifyIterations = 0
 		VerifyFrame:SetScript("OnUpdate", self.VerifyModels)
 		CM:PrintChat("Unlocked Appearances Tab!", "FFFFFF")
-		
-		ClickMogWardrobeButton:Hide()
 	end
 end
 
@@ -135,23 +150,30 @@ function f:HookWardrobe()
 	end
 	
 	-- update model camera on category changes
-	hooksecurefunc(WardrobeCollectionFrame.ItemsCollectionFrame, "SetActiveSlot", function(frame)
-		if not WardrobeCollectionFrame.ItemsCollectionFrame:GetActiveCategory() then return end -- ignore illusions
+	hooksecurefunc(ItemsCollection, "SetActiveSlot", function(frame)
+		if not ItemsCollection:GetActiveCategory() then return end -- ignore illusions
 		self:UpdateModelCamera(frame)
 	end)
 	
 	-- update items on page changes
-	hooksecurefunc(WardrobeCollectionFrame.ItemsCollectionFrame.PagingFrame, "SetCurrentPage", function(frame)
+	hooksecurefunc(ItemsCollection.PagingFrame, "SetCurrentPage", function(frame)
 		verifyIterations = 0
 		VerifyFrame:SetScript("OnUpdate", self.VerifyModels)
 	end)
 	
 	-- fill progress bar
-	hooksecurefunc(WardrobeCollectionFrame.ItemsCollectionFrame, "UpdateProgressBar", self.UpdateProgressBar)
+	hooksecurefunc(ItemsCollection, "UpdateProgressBar", self.UpdateProgressBar)
+	
+	if not IsWardRobeSortLoaded then -- avoid double functionality
+		-- show appearance information in tooltip
+		for _, model in pairs(ItemsCollection.Models) do
+			model:HookScript("OnEnter", f.Model_OnEnter)
+		end
+	end
 end
 
 function f:UpdateModelCamera()
-	for _, model in pairs(WardrobeCollectionFrame.ItemsCollectionFrame.Models) do
+	for _, model in pairs(ItemsCollection.Models) do
 		if model:IsShown() then
 			-- cant use C_TransmogCollection.GetAppearanceCameraID since it doesnt return an ID for non-class proficiency appearances
 			local sources = C_TransmogCollection.GetAppearanceSources(model.visualInfo.visualID)
@@ -164,25 +186,27 @@ function f:UpdateWardrobe()
 	if needsModelUpdate then
 		needsModelUpdate = false
 		-- this gives a noticeable delay when reloading the models
-		WardrobeCollectionFrame.ItemsCollectionFrame:OnUnitModelChangedEvent()
+		ItemsCollection:OnUnitModelChangedEvent()
 		self:UpdateModelCamera()
 	end
 	
-	WardrobeCollectionFrame.ItemsCollectionFrame:RefreshVisualsList()
-	WardrobeCollectionFrame.ItemsCollectionFrame:UpdateItems()
+	ItemsCollection:RefreshVisualsList()
+	ItemsCollection:UpdateItems()
+	self.UpdateMouseFocus() -- update tooltip when scrolling
 end
 
 function f.VerifyModels()
-	if not WardrobeCollectionFrame.ItemsCollectionFrame:GetActiveCategory() then return end -- ignore illusions
+	if not ItemsCollection:GetActiveCategory() then return end -- ignore illusions
 	
 	f:UpdateWardrobe() -- need to update first before verifying
 	verifyIterations = verifyIterations + 1
 	local needsRefresh
 	
-	for _, model in pairs(WardrobeCollectionFrame.ItemsCollectionFrame.Models) do
+	for _, model in pairs(ItemsCollection.Models) do
 		if model:IsShown() then
 			local visualID = model.visualInfo.visualID
 			local sources = C_TransmogCollection.GetAppearanceSources(visualID)
+			local reason = ScanningModel:TryOn(sources[1].sourceID)
 			
 			-- refresh sources for when header source is invalid, and for updating the tooltip
 			for k, v in pairs(sources) do
@@ -193,16 +217,15 @@ function f.VerifyModels()
 				end
 			end
 			
-			local reason = ScanningModel:TryOn(sources[1].sourceID)
-			
 			if reason == Enum.ItemTryOnReason.WrongRace then
 				needsRefresh = true
 				local _, catVisuals = f:GetAppearances()
-				local visuals = catVisuals[WardrobeCollectionFrame.ItemsCollectionFrame:GetActiveCategory()]
+				local visuals = catVisuals[ItemsCollection:GetActiveCategory()]
 
 				for k, v in pairs(visuals) do
 					if v.visualID == visualID then
 						tremove(visuals, k) -- filter out undisplayable/unmorphable faction-specific gear
+						verifyIterations = 0 -- any new visuals should get another iteration to get cached
 						break
 					end
 				end
@@ -220,22 +243,24 @@ function f.VerifyModels()
 end
 
 function f:OverrideUpdate()
-	for _, model in pairs(WardrobeCollectionFrame.ItemsCollectionFrame.Models) do
+	for _, model in pairs(ItemsCollection.Models) do
 		if model:IsShown() then
 			local visualID = model.visualInfo.visualID
 			local sources = C_TransmogCollection.GetAppearanceSources(visualID)
 			local reason = ScanningModel:TryOn(sources[1].sourceID)
+			local debugname = model:GetDebugName():match(".+%.(.+)")
 			
 			if reason == Enum.ItemTryOnReason.DataPending then
 				if #sources == 1 then
-					model:SetModel("interface/buttons/talktomequestionmark.m2")
-					Model_ApplyUICamera(model, 372) -- looks nice, maybe a bit too close
-					needsModelUpdate = true
+					if not weaponSlots[ItemsCollection:GetActiveSlot()] then
+						model:SetModel("interface/buttons/talktomequestionmark.m2")
+						Model_ApplyUICamera(model, 372) -- looks nice, maybe a bit too close
+						needsModelUpdate = true
+					end
 				else
-					--needsRefresh = true
 					for k, v in pairs(sources) do
 						if v.name then
-							model:TryOn(v.sourceID)
+							model:TryOn(v.sourceID) -- update appearance
 							break
 						end
 					end
@@ -246,10 +271,24 @@ function f:OverrideUpdate()
 end
 
 function f.UpdateProgressBar()
-	local category = WardrobeCollectionFrame.ItemsCollectionFrame:GetActiveCategory()
+	local category = ItemsCollection:GetActiveCategory()
 	if category then
 		local _, catvisuals = f:GetAppearances()
-		local total = #catvisuals[WardrobeCollectionFrame.ItemsCollectionFrame:GetActiveCategory()]
+		local total = #catvisuals[ItemsCollection:GetActiveCategory()]
 		WardrobeCollectionFrame_UpdateProgressBar(total, total)
+	end
+end
+
+function f.Model_OnEnter(self)
+	GameTooltip:AddLine("|cffFFFFFF"..self.visualInfo.visualID.."|r")
+	GameTooltip:Show()
+end
+
+function f.UpdateMouseFocus()
+	if not IsWardRobeSortLoaded then
+		local focus = GetMouseFocus()
+		if focus and focus:GetObjectType() == "DressUpModel" and focus:GetParent() == ItemsCollection then
+			focus:GetScript("OnEnter")(focus)
+		end
 	end
 end

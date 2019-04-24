@@ -44,7 +44,6 @@ function CM.MorphMount(frame, button)
 		end
 		lm("mount", displayID)
 		lm("morph")
-		PlaySound(62542)
 		CM:PrintChat(format("Morphed mount to ID |cffFFFFFF%d|r %s", displayID, GetSpellLink(spellID)), "FF6600")
 	end
 end
@@ -59,7 +58,6 @@ function CM.MorphItemSet(frame, button)
 			lm(SlotNames[C_Transmog.GetSlotForInventoryType(v.invType)], source.itemID, source.itemModID)
 		end
 		lm("morph")
-		PlaySound(62542) -- ui_transmogrify_apply.ogg
 		CM:PrintChat(format("Morphed to set |cffFFFFFF%d: %s|r", setID, name), "FF6600")
 	end
 end
@@ -95,6 +93,5 @@ function CM.MorphItem(frame, button)
 				end
 			end
 		end
-		PlaySound(62542)
 	end
 end
