@@ -14,6 +14,28 @@ local verifyIterations
 local needsModelUpdate
 local ScanningModel
 
+local weaponCategories = {
+	-- name, isWeapon, canEnchant, canMainHand, canOffHand
+	[12] = {"Wands", true, true, true, false},
+	[13] = {"One-Handed Axes", true, true, true, false},
+	[14] = {"One-Handed Swords", true, true, true, false},
+	[15] = {"One-Handed Maces", true, true, true, false},
+	[16] = {"Daggers", true, true, true, false},
+	[17] = {"Fist Weapons", true, true, true, true},
+	[18] = {"Shields", true, false, false, true},
+	[19] = {"Held In Off-hand", true, false, false, true},
+	[20] = {"Two-Handed Axes", true, true, true, false},
+	[21] = {"Two-Handed Swords", true, true, true, false},
+	[22] = {"Two-Handed Maces", true, true, true, false},
+	[23] = {"Staves", true, true, true, false},
+	[24] = {"Polearms", true, true, true, false},
+	[25] = {"Bows", true, false, true, false},
+	[26] = {"Guns", true, false, true, false},
+	[27] = {"Crossbows", true, false, true, false},
+	[27] = {"Warglaives", true, true, true, true},
+	[27] = {"Legion Artifacts", true, true, true, false},
+}
+
 local weaponSlots = {
 	MAINHANDSLOT = true,
 	SECONDARYHANDSLOT = true,
@@ -68,11 +90,11 @@ function f:InitWardrobe()
 		ScanningModel = CreateFrame("DressUpModel")
 		ScanningModel:SetUnit("player")
 		
-		self:PlaceUnlockButton()
+		self:CreateUnlockButton()
 	end)
 end
 
-function f:PlaceUnlockButton()
+function f:CreateUnlockButton()
 	local btn = CreateFrame("Button", nil, ItemsCollection, "UIPanelButtonTemplate")
 	btn:SetPoint("TOPLEFT", WardrobeCollectionFrame.Tabs[1], "BOTTOMLEFT", -40, -55) -- topleft corner of the frame
 	btn:SetWidth(100)
@@ -87,7 +109,7 @@ end
 
 function f:UnlockWardrobe()
 	if not unlocked then
-		CM:PrintChat("Loading data...", "FFFFFF")
+		CM:PrintChat("Loading data..", "FFFFFF")
 		self:RegisterEvent("TRANSMOG_COLLECTION_ITEM_UPDATE")
 		self:GetAppearances()
 		self:HookWardrobe()
@@ -149,6 +171,19 @@ function f:HookWardrobe()
 		return sources[appearanceID]
 	end
 	
+	local oldGetCategoryInfo = C_TransmogCollection.GetCategoryInfo
+	
+	function C_TransmogCollection.GetCategoryInfo(categoryID)
+		local name = oldGetCategoryInfo(categoryID)
+		local cats = weaponCategories[categoryID]
+		if cats then
+			cats[1] = name or cats[1] -- prioritizy any localized name
+			return unpack(weaponCategories[categoryID])
+		else
+			return name
+		end
+	end
+	
 	-- update model camera on category changes
 	hooksecurefunc(ItemsCollection, "SetActiveSlot", function(frame)
 		if not ItemsCollection:GetActiveCategory() then return end -- ignore illusions
@@ -164,8 +199,8 @@ function f:HookWardrobe()
 	-- fill progress bar
 	hooksecurefunc(ItemsCollection, "UpdateProgressBar", self.UpdateProgressBar)
 	
+	-- show appearance information in tooltip
 	if not IsWardRobeSortLoaded then -- avoid double functionality
-		-- show appearance information in tooltip
 		for _, model in pairs(ItemsCollection.Models) do
 			model:HookScript("OnEnter", f.Model_OnEnter)
 		end
