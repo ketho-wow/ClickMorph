@@ -32,8 +32,8 @@ local weaponCategories = {
 	[25] = {"Bows", true, false, true, false},
 	[26] = {"Guns", true, false, true, false},
 	[27] = {"Crossbows", true, false, true, false},
-	[27] = {"Warglaives", true, true, true, true},
-	[27] = {"Legion Artifacts", true, true, true, false},
+	[28] = {"Warglaives", true, true, true, true},
+	[29] = {"Legion Artifacts", true, true, true, false},
 }
 
 local weaponSlots = {
