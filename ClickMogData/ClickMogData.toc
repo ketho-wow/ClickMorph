@@ -1,0 +1,8 @@
+## Interface: 80100
+## Title: ClickMogData
+## Version: 8.2.0.30080
+## Author: Ketho
+## Notes: Load on Demand ClickMog FileData
+## LoadOnDemand: 1
+
+FileData.lua
