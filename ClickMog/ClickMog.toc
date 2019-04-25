@@ -1,8 +1,10 @@
 ## Interface: 80100
-## Version: 1.0.1
+## Version: 1.0.2
 ## Title: |cffA236EFC|cff9448F1l|cff865BF2i|cff786DF4c|cff6A80F6k|cff5D92F7M|cff4FA4F9o|cff41B7FAg|r
 ## Notes: Expands functionality for LucidMorph
 ## Author: Ketho, Icesythe
+
+FileData.lua
 
 ClickMog.lua
 Mount.lua
