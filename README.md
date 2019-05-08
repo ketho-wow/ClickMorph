@@ -1,8 +1,7 @@
 ClickMorph (previously ClickMog) expands the usability of [LucidMorph](https://www.ownedcore.com/forums/world-of-warcraft/world-of-warcraft-bots-programs/657637-lucid-morph-basic-morphing-tool.html) allowing the user to "ClickMorph" like existed in tMorph. You can morph by alt-clicking on a model.
 
 ## Download
-* **v1.0.4** (2019-05-08) https://mega.nz/#!bI8WzQ5R!RTO0Q4ECn-ilHAdJpO181J3mscS3nBqCY_sl-UCFyNU
-* **v1.0.3** (2019-05-08) https://mega.nz/#!XREFjKaL!UuU-lma2vT_28s8obMbl4O15ZhNz6KOpu-bOXEIsPCk
+* **v1.0.4** (2019-05-08) https://mega.nz/#!WMk0CQYA!cgHwKNYjzJ4HeJiypbUR-GXBppLXjT9yoBCDvYTo3gU
 
 ## Features
 * Morph from unlocked Appearances Tab - Gear, Weapons, Enchants, Sets  
