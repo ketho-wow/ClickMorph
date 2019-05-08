@@ -1,6 +1,6 @@
 
-ClickMog = {}
-local CM = ClickMog
+ClickMorph = {}
+local CM = ClickMorph
 
 local SlotNames = {
 	[1] = "head",
@@ -19,7 +19,7 @@ local SlotNames = {
 }
 
 function CM:PrintChat(msg, r, g, b)
-	DEFAULT_CHAT_FRAME:AddMessage(format("|cff7fff00ClickMog|r: |r%s", msg), r, g, b)
+	DEFAULT_CHAT_FRAME:AddMessage(format("|cff7fff00ClickMorph|r: |r%s", msg), r, g, b)
 end
 
 function CM:HasLucidMorph()
@@ -31,9 +31,12 @@ function CM:HasLucidMorph()
 	end
 end
 
-function CM.MorphMountModelScene(frame, button)
-	if IsLeftAltKeyDown() and CM:HasLucidMorph() then
-		local mountID = MountJournal.selectedMountID
+function CM:CanMorph()
+	return IsAltKeyDown() and self:HasLucidMorph()
+end
+
+function CM:MorphMount(mountID)
+	if self:CanMorph() then
 		local _, spellID = C_MountJournal.GetMountInfoByID(mountID)
 		local displayID = C_MountJournal.GetMountInfoExtraByID(mountID)
 		
@@ -45,26 +48,20 @@ function CM.MorphMountModelScene(frame, button)
 		lm("morph")
 		CM:PrintChat(format("Morphed mount to |cff71D5FF%d|r %s", displayID, GetSpellLink(spellID)))
 	end
+end
+
+function CM.MorphMountModelScene(frame, button)
+	local mountID = MountJournal.selectedMountID
+	CM:MorphMount(mountID)
 end
 
 function CM.MorphMountScrollFrame(frame, button)
-	if IsLeftAltKeyDown() and CM:HasLucidMorph() then
-		local mountID = select(12, C_MountJournal.GetDisplayedMountInfo(frame.index))
-		local _, spellID = C_MountJournal.GetMountInfoByID(mountID)
-		local displayID = C_MountJournal.GetMountInfoExtraByID(mountID)
-		
-		if not displayID then
-			local multipleIDs = C_MountJournal.GetMountAllCreatureDisplayInfoByID(mountID)
-			displayID = multipleIDs[random(#multipleIDs)].creatureDisplayID
-		end
-		lm("mount", displayID)
-		lm("morph")
-		CM:PrintChat(format("Morphed mount to |cff71D5FF%d|r %s", displayID, GetSpellLink(spellID)))
-	end
+	local mountID = select(12, C_MountJournal.GetDisplayedMountInfo(frame.index))
+	CM:MorphMount(mountID)
 end
 
 function CM.MorphItemSet(frame, button)
-	if IsLeftAltKeyDown() and CM:HasLucidMorph() then
+	if CM:CanMorph() then
 		local setID = WardrobeCollectionFrame.SetsCollectionFrame.selectedSetID
 		local setInfo = C_TransmogSets.GetSetInfo(setID)
 		
@@ -78,7 +75,7 @@ function CM.MorphItemSet(frame, button)
 end
 
 function CM.MorphItem(frame, button)
-	if IsLeftAltKeyDown() and CM:HasLucidMorph() then
+	if CM:CanMorph() then
 		local transmogType = WardrobeCollectionFrame.ItemsCollectionFrame.transmogType
 		local activeSlot = WardrobeCollectionFrame.ItemsCollectionFrame.activeSlot
 		local slotID = GetInventorySlotInfo(activeSlot)
@@ -97,10 +94,7 @@ function CM.MorphItem(frame, button)
 			if frame.visualInfo.sourceID then
 				name = select(3, C_TransmogCollection.GetIllusionSourceInfo(frame.visualInfo.sourceID))
 			end
-			
-			if not name or name == "" then
-				name = CM.ItemVisuals[visualID]
-			end
+			name = (not name or name == "") and CM.ItemVisuals[visualID] or name
 			
 			CM:PrintChat(format("Morphed %s to enchant |cff71D5FF%d|r %s", SlotNames[slotID], visualID, name))
 			
@@ -120,12 +114,10 @@ function CM.MorphItem(frame, button)
 	end
 end
 
-function CM.MorphDisplayID(frame)
-	if IsLeftAltKeyDown() and CM:HasLucidMorph() then
-		lm("model", frame.ModelFrame.DisplayInfo)
-		lm("morph")
-		CM:PrintChat(format("Morphed to Display ID |cff71D5FF%d|r", frame.ModelFrame.DisplayInfo))
-	end
+function CM:MorphDisplayID(frame)
+	lm("model", frame.ModelFrame.DisplayInfo)
+	lm("morph")
+	self:PrintChat(format("Morphed to Display ID |cff71D5FF%d|r", frame.ModelFrame.DisplayInfo))
 end
 
 -- piggyback off Taku's Morph Catalog
@@ -136,8 +128,8 @@ if IsAddOnLoaded("TakusMorphCatalog") then
 			local oldOnClick = child.ModelPreview:GetScript("OnMouseDown")
 			
 			child.ModelPreview:SetScript("OnMouseDown", function(frame, button)
-				if IsLeftAltKeyDown() and CM:HasLucidMorph() then
-					CM.MorphDisplayID(frame)
+				if CM:CanMorph() then
+					CM:MorphDisplayID(frame)
 				else
 					oldOnClick(frame)
 				end

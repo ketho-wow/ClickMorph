@@ -1,0 +1,9 @@
+## Interface: 80100
+## Title: ClickMorphData
+## Version: 8.2.0.30080
+## Author: Ketho
+## Notes: Load on Demand ClickMorph FileData
+## LoadOnDemand: 1
+
+FileData.lua
+ItemVisuals.lua

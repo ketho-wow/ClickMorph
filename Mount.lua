@@ -1,5 +1,5 @@
 
-local CM = ClickMog
+local CM = ClickMorph
 local f = CreateFrame("Frame")
 
 local active

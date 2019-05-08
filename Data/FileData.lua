@@ -36550,8 +36550,8 @@ local FileData = {
 [40535]="tabard_battlepvps3_horde_chest",
 }
 
-ClickMogData = {}
+ClickMorphData = {}
 
-function ClickMogData:GetFileData()
+function ClickMorphData:GetFileData()
 	return FileData
 end
