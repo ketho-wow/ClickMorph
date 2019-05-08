@@ -31,9 +31,25 @@ function CM:HasLucidMorph()
 	end
 end
 
-function CM.MorphMount(frame, button)
+function CM.MorphMountModelScene(frame, button)
 	if IsLeftAltKeyDown() and CM:HasLucidMorph() then
 		local mountID = MountJournal.selectedMountID
+		local _, spellID = C_MountJournal.GetMountInfoByID(mountID)
+		local displayID = C_MountJournal.GetMountInfoExtraByID(mountID)
+		
+		if not displayID then
+			local multipleIDs = C_MountJournal.GetMountAllCreatureDisplayInfoByID(mountID)
+			displayID = multipleIDs[random(#multipleIDs)].creatureDisplayID
+		end
+		lm("mount", displayID)
+		lm("morph")
+		CM:PrintChat(format("Morphed mount to |cff71D5FF%d|r %s", displayID, GetSpellLink(spellID)))
+	end
+end
+
+function CM.MorphMountScrollFrame(frame, button)
+	if IsLeftAltKeyDown() and CM:HasLucidMorph() then
+		local mountID = select(12, C_MountJournal.GetDisplayedMountInfo(frame.index))
 		local _, spellID = C_MountJournal.GetMountInfoByID(mountID)
 		local displayID = C_MountJournal.GetMountInfoExtraByID(mountID)
 		
@@ -50,14 +66,14 @@ end
 function CM.MorphItemSet(frame, button)
 	if IsLeftAltKeyDown() and CM:HasLucidMorph() then
 		local setID = WardrobeCollectionFrame.SetsCollectionFrame.selectedSetID
-		local name = C_TransmogSets.GetSetInfo(setID).name
+		local setInfo = C_TransmogSets.GetSetInfo(setID)
 		
 		for _, v in pairs(WardrobeSetsDataProviderMixin:GetSortedSetSources(setID)) do
 			local source = C_TransmogCollection.GetSourceInfo(v.sourceID)
 			lm(SlotNames[C_Transmog.GetSlotForInventoryType(v.invType)], source.itemID, source.itemModID)
 		end
 		lm("morph")
-		CM:PrintChat(format("Morphed to set |cff71D5FF%d: %s|r", setID, name))
+		CM:PrintChat(format("Morphed to set |cff71D5FF%d: %s|r (%s)", setID, setInfo.name, setInfo.description))
 	end
 end
 
@@ -100,6 +116,33 @@ function CM.MorphItem(frame, button)
 					CM:PrintChat(format("Morphed %s to item |cff71D5FF%d:%d|r %s", SlotNames[slotID], v.itemID, v.itemModID, itemLink))
 				end
 			end
+		end
+	end
+end
+
+function CM.MorphDisplayID(frame)
+	if IsLeftAltKeyDown() and CM:HasLucidMorph() then
+		lm("model", frame.ModelFrame.DisplayInfo)
+		lm("morph")
+		CM:PrintChat(format("Morphed to Display ID |cff71D5FF%d|r", frame.ModelFrame.DisplayInfo))
+	end
+end
+
+-- piggyback off Taku's Morph Catalog
+if IsAddOnLoaded("TakusMorphCatalog") then
+	for _, child in pairs({UIParent:GetChildren()}) do
+		if child.Collection and child.ModelPreview then -- found TMCFrame
+			-- prehook OnClick, dont click the frame away if morphing
+			local oldOnClick = child.ModelPreview:GetScript("OnMouseDown")
+			
+			child.ModelPreview:SetScript("OnMouseDown", function(frame, button)
+				if IsLeftAltKeyDown() and CM:HasLucidMorph() then
+					CM.MorphDisplayID(frame)
+				else
+					oldOnClick(frame)
+				end
+			end)
+			break
 		end
 	end
 end

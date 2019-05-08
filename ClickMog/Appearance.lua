@@ -8,10 +8,11 @@ local active, unlocked
 local visualCache, catCache, illusionCache
 local startupTimer
 local startupUnlockTime
-local IsWardRobeSortLoaded
+local IsWardRobeSortLoaded -- WardRobeSort actually gets screwed by this addon
 local FileData
 
 local verifyIterations
+local needsRefresh
 local needsModelUpdate
 local ScanningModel
 
@@ -273,6 +274,10 @@ function f:InitWardrobe()
 		if active then
 			-- needed when showing the wardrobe after the first time
 			self:UpdateModelCamera(ItemsCollection)
+			-- needed when showing the wardrobe again after using the search function
+			if needsRefresh then
+				VerifyFrame:SetScript("OnUpdate", self.VerifyModels)
+			end
 			return
 		else
 			active = true
@@ -404,11 +409,13 @@ function f:GetAppearances()
 end
 
 function f:HookWardrobe()
+	local searchAppearanceIDs, activeSearch = {}
+
 	-- appearances
 	function C_TransmogCollection.GetCategoryAppearances(categoryID)
-		return catCache[categoryID]
+		return activeSearch and searchAppearanceIDs or catCache[categoryID]
 	end
-	
+		
 	function C_TransmogCollection.GetAppearanceSources(appearanceID)
 		return visualCache[appearanceID]
 	end
@@ -431,11 +438,21 @@ function f:HookWardrobe()
 			return name
 		end
 	end
-	
-	-- update model camera on category changes
-	hooksecurefunc(ItemsCollection, "SetActiveSlot", function(frame)
+
+	-- update model camera on category/tab changes
+	local function OnCategoryChange()
 		if not ItemsCollection:GetActiveCategory() then return end -- ignore illusions
-		self:UpdateModelCamera(frame)
+		WardrobeCollectionFrame.searchBox:GetScript("OnTextChanged")(WardrobeCollectionFrame.searchBox) -- redo any active search
+		self:UpdateModelCamera()
+	end
+	
+	hooksecurefunc(ItemsCollection, "SetActiveSlot", OnCategoryChange)
+	hooksecurefunc("WardrobeCollectionFrame_SetTab", function(tabID)
+		if tabID == 1 then -- Items
+			OnCategoryChange()
+		elseif tabID == 2 then -- Sets
+			-- ...
+		end
 	end)
 	
 	-- update items on page changes
@@ -456,6 +473,60 @@ function f:HookWardrobe()
 			model:HookScript("OnEnter", f.Model_OnEnterPosthook)
 		end
 	end
+	
+	-- fix search function
+	WardrobeCollectionFrame.searchBox:HookScript("OnTextChanged", function(frame)
+		local text = frame:GetText():trim():lower()
+		local tab = WardrobeCollectionFrame.selectedCollectionTab
+		
+		if tab == 1 then -- Items tab
+			if #text > 0 then
+				wipe(searchAppearanceIDs)
+				activeSearch = true
+				for _, visuals in pairs(catCache[ItemsCollection:GetActiveCategory()]) do
+					for _, source in pairs(visualCache[visuals.visualID]) do
+						-- cache stuff on the go and pray nobody pastes in a whole name instead of typing
+						-- yeah this is disgusting and it doesnt even work properly, gotta rework this
+						if not source.name then
+							local newSource = C_TransmogCollection.GetSourceInfo(source.sourceID)
+							source.name = newSource.name
+							source.quality = newSource.quality
+						end
+						-- also search through texture name
+						if source.name and source.name:lower():find(text) or (FileData[visuals.visualID] or ""):find(text) then
+							tinsert(searchAppearanceIDs, { -- fake visual
+								isCollected = true,
+								isUsable = true,
+								visualID = visuals.visualID,
+								uiOrder = visuals.visualID,
+							})
+							break
+						end
+					end
+				end
+				-- update search models
+				VerifyFrame:SetScript("OnUpdate", self.VerifyModels)
+			else
+				activeSearch = false
+			end
+			-- also fixes a blizzard bug:
+			-- when you have an active search from items, and switch to sets then back to items, only the previously shown models get updated
+			self:UpdateWardrobe()
+			self:UpdateModelCamera() -- need to update model camera only after UpdateWardrobe
+		elseif tab == 2 then -- Sets tab
+			-- ...
+		end
+	end)
+	
+	local function ClearSearch()
+		wipe(searchAppearanceIDs)
+		activeSearch = false
+		needsRefresh = true -- models need to be updated more than once after clearing a search
+		self:UpdateWardrobe() -- prepare the wardrobe for the next time it gets shown again
+	end
+	
+	WardrobeCollectionFrame.searchBox:HookScript("OnHide", ClearSearch)
+	WardrobeCollectionFrame.searchBox.clearButton:HookScript("OnClick", ClearSearch)
 end
 
 function f:UpdateModelCamera()
@@ -489,7 +560,7 @@ function f.VerifyModels()
 	
 	f:UpdateWardrobe() -- need to update first before verifying
 	verifyIterations = verifyIterations + 1
-	local needsRefresh
+	needsRefresh = false
 	
 	for _, model in pairs(ItemsCollection.Models) do
 		if model:IsShown() then

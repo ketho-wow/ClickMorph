@@ -27,8 +27,13 @@ function f:InitMountJournal()
 		
 		self:UnlockMounts()
 		
-		-- LucidMorph mounts
-		MountJournal.MountDisplay.ModelScene:HookScript("OnMouseUp", CM.MorphMount)
+		-- modelscene
+		MountJournal.MountDisplay.ModelScene:HookScript("OnMouseUp", CM.MorphMountModelScene)
+		
+		-- scrollframe buttons
+		for _, button in pairs(MountJournal.ListScrollFrame.buttons) do
+			button:HookScript("OnClick", CM.MorphMountScrollFrame)
+		end
 	end)
 end
 
@@ -72,14 +77,14 @@ function f:UnlockMounts()
 	
 	-- roll our own search function since default search (server side) is restricted to the normal subset
 	MountJournal.searchBox:HookScript("OnTextChanged", function(self)
-		wipe(searchMountIDs)
-		local text = self:GetText():trim()
+		local text = self:GetText():trim():lower()
 		
 		if #text > 0 then
+			wipe(searchMountIDs)
 			activeSearch = true
 			for _, v in pairs(mountIDs) do
 				-- should probably optimize this with a cache
-				if C_MountJournal.GetMountInfoByID(v):lower():find(text:lower()) then
+				if C_MountJournal.GetMountInfoByID(v):lower():find(text) then
 					tinsert(searchMountIDs, v)
 				end
 			end
