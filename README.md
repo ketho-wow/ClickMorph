@@ -4,23 +4,24 @@ ClickMorph (previously ClickMog) expands the usability of [LucidMorph](https://w
 * https://www.curseforge.com/wow/addons/clickmorph
 
 ## Features
-* Morph from unlocked Appearances Tab - Gear, Weapons, Enchants, Sets  
-* Morph from unlocked Mounts Tab
-* Morph from [Taku's Morph Catalog](https://www.curseforge.com/wow/addons/takus-morph-catalog) (if loaded)
+* Morph from unlocked Appearances tab - Gear, Weapons, Enchants, Sets  
+* Morph from unlocked Mounts tab
+* Supports [MogIt](https://www.curseforge.com/wow/addons/mogit)
+* Supports [Taku's Morph Catalog](https://www.curseforge.com/wow/addons/takus-morph-catalog)
+* Morph from the Inspect window
 
 ## Media
 * Morphing enchants: https://gfycat.com/vibrantanotherilladopsis
 * Morphing appearances: https://streamable.com/99bwf
 * Morphing mounts: https://i.gyazo.com/073c0cb128144cc08b17ce5d422e6958.mp4
 
-The appearances tab has to be unlocked manually since it takes around 10~ seconds to load all models.
+The appearances tab has to be unlocked manually since it takes around 10~ seconds to load all models after the first run.
 
 ![](https://i.imgur.com/6DLFBhW.png)
 
 ## To Do
 * Unlock Transmog sets
 * Unlock Titles
-* Transmog profiles
 * Fix bugs and refactoring
 
 If the game crashes it's most likely due to the LucidMorph in-game commands being unstable. Please report any Lua errors or bugs in [Issues](https://github.com/Ketho/ClickMorph/issues) or #lm-help-desk.

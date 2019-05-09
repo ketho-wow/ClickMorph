@@ -3,10 +3,9 @@
 ## Title: ClickMorph
 ## Notes: Expands functionality for LucidMorph
 ## Author: Ketho, Icesythe
-## OptionalDeps: TakusMorphCatalog
-
-FileData.lua
+## OptionalDeps: MogIt, TakusMorphCatalog
 
 ClickMorph.lua
 Mount.lua
 Appearance.lua
+Inspect.lua

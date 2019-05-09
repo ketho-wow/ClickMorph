@@ -2,8 +2,9 @@
 ## Title: ClickMorphData
 ## Version: 8.2.0.30080
 ## Author: Ketho
-## Notes: Load on Demand ClickMorph FileData
+## Notes: Load on Demand FileData
 ## LoadOnDemand: 1
+## SavedVariables: ClickMorphDataDB
 
-FileData.lua
+ItemAppearance.lua
 ItemVisuals.lua

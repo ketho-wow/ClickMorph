@@ -17,13 +17,12 @@ else
 end
 
 function f:InitMountJournal()
-	-- only load once the wardrobe collections tab is used
+	-- only load once the mounts tab is opened
 	MountJournal:HookScript("OnShow", function(frame)
 		if active then
 			return
-		else
-			active = true
 		end
+		active = true
 		
 		self:UnlockMounts()
 		

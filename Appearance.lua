@@ -1,32 +1,18 @@
---[[
-            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
-                    Version 2, December 2004
 
- Copyright (C) 2004 Sam Hocevar <sam@hocevar.net>
-
- Everyone is permitted to copy and distribute verbatim or modified
- copies of this license document, and changing it is allowed as long
- as the name is changed.
-
-            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
-   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
-
-  0. You just DO WHAT THE FUCK YOU WANT TO.
-]]
-
+-- the unlocked wardrobe is kind of buggy and messy
 local CM = ClickMorph
+local db
+local cache = {}
+
 local f = CreateFrame("Frame")
 local VerifyFrame = CreateFrame("Frame")
 local ItemsCollection
 
 local active, unlocked
-local visualCache, catCache, illusionCache
-local startupTimer
-local startupUnlockTime
+local startupTimer, startupUnlockTime
 local IsWardRobeSortLoaded -- WardRobeSort actually gets screwed by this addon
-local FileData, ItemVisuals
 
-local verifyIterations
+local verifyIterations = 0
 local needsRefresh
 local needsModelUpdate
 local ScanningModel
@@ -34,6 +20,11 @@ local ScanningModel
 local MAX_SOURCE_ID = 1.1e5 -- highest ID is 104339 (8.1.5)
 local MAX_ILLUSION_ID = 1e4 -- highest ID is 6096 (8.1.5)
 local MAX_ITEM_VISUAL_ID = 254 -- highest ID is 254 (8.1.5)
+
+local defaults = {
+	version = 1,
+	build = select(2, GetBuildInfo()),
+}
 
 local weaponSlots = {
 	MAINHANDSLOT = true,
@@ -79,6 +70,19 @@ function f:OnEvent(event, arg1)
 	end
 end
 
+-- wait until all initial TRANSMOG_COLLECTION_ITEM_UPDATE events have fired
+function f:UnlockTimer(elapsed)
+	startupTimer = startupTimer - elapsed
+	-- between the first and second event there can be more than 2 seconds delay
+	if startupTimer < 0 and time() > startupUnlockTime + 4 then
+		self:SetScript("OnUpdate", nil)
+		unlocked = true
+		
+		VerifyFrame:SetScript("OnUpdate", self.VerifyModels)
+		CM:PrintChat("Unlocked Appearances Tab!")
+	end
+end
+
 if IsAddOnLoaded("Blizzard_Collections") then
     f:InitWardrobe()
 else
@@ -88,7 +92,7 @@ end
 f:SetScript("OnEvent", f.OnEvent)
 
 function f:InitWardrobe()
-	-- only load once the wardrobe collections tab is used
+	-- only load once the appearances tab is opened
 	WardrobeCollectionFrame:HookScript("OnShow", function(frame)
 		if active then
 			-- needed when showing the wardrobe after the first time
@@ -98,19 +102,18 @@ function f:InitWardrobe()
 				VerifyFrame:SetScript("OnUpdate", self.VerifyModels)
 			end
 			return
-		else
-			active = true
 		end
+		active = true
 		
 		ItemsCollection = WardrobeCollectionFrame.ItemsCollectionFrame
 		IsWardRobeSortLoaded = IsAddOnLoaded("WardRobeSort")
 		
 		-- LucidMorph item sets model
-		WardrobeCollectionFrame.SetsCollectionFrame.Model:HookScript("OnMouseUp", CM.MorphItemSet)
+		WardrobeCollectionFrame.SetsCollectionFrame.Model:HookScript("OnMouseUp", CM.MorphTransmogSet)
 		
 		-- LucidMorph item models
 		for _, model in pairs(ItemsCollection.Models) do
-			model:HookScript("OnMouseUp", CM.MorphItem)
+			model:HookScript("OnMouseUp", CM.MorphTransmogItem)
 		end
 		
 		ScanningModel = CreateFrame("DressUpModel")
@@ -135,96 +138,102 @@ end
 
 function f:UnlockWardrobe()
 	if not unlocked then
-		CM:PrintChat("Loading data..")
-		self:RegisterEvent("TRANSMOG_COLLECTION_ITEM_UPDATE")
-		FileData, ItemVisuals = self:LoadFileData("ClickMorphData")
-		self:GetAppearances()
+		-- Load On Demand data from DBCs
+		CM.ItemAppearance, CM.ItemVisuals = self:LoadFileData("ClickMorphData")
+		
+		self:InitializeData()
 		self:HookWardrobe()
 		self:UpdateWardrobe() -- initial update
 	end
 end
 
--- wait until all initial TRANSMOG_COLLECTION_ITEM_UPDATE events have fired
-function f:UnlockTimer(elapsed)
-	startupTimer = startupTimer - elapsed
-	-- between the first and second event there can be more than 2 seconds delay
-	if startupTimer < 0 and time() > startupUnlockTime + 4 then
-		self:SetScript("OnUpdate", nil)
+function f:InitializeData()
+	-- clear cache on new game builds or db structure changes
+	if not ClickMorphDataDB or ClickMorphDataDB.build < defaults.build or ClickMorphDataDB.version < defaults.version then
+		ClickMorphDataDB = CopyTable(defaults)
+	end
+	db = ClickMorphDataDB
+	
+	local version = GetAddOnMetadata("ClickMorph", "Version")
+	
+	if not db.SourceInfo then
+		CM:PrintChat(format("|cff71D5FFv%s|r Rebuilding data..", version))
+		db.SourceInfo, db.IllusionSourceInfo = self:QueryData()
+	else
 		unlocked = true
-		
-		verifyIterations = 0
+		CM:PrintChat(format("|cff71D5FFv%s|r Unlocked Appearances Tab!", version))
 		VerifyFrame:SetScript("OnUpdate", self.VerifyModels)
-		CM:PrintChat("Unlocked Appearances Tab!")
+	end
+	
+	self:RegisterEvent("TRANSMOG_COLLECTION_ITEM_UPDATE")
+	
+	cache.CategoryVisuals = {}
+	for i = 0, 29 do -- init category tables
+		cache.CategoryVisuals[i] = {}
+	end
+	
+	for visualID, sources in pairs(db.SourceInfo) do
+		tinsert(cache.CategoryVisuals[sources[1].categoryID], {
+			isCollected = true,
+			isUsable = true,
+			visualID = visualID,
+			uiOrder = visualID,
+		})
 	end
 end
 
-function f:GetAppearances()
-	if not visualCache then
-		visualCache, catCache, illusionCache = {}, {}, {}
-		local hasVisual = {}
-		for i = 0, 29 do -- init category tables
-			catCache[i] = {}
+function f:QueryData()
+	local sources, illusions = {}, {}
+	local enchants = {}
+	
+	for i = 1, MAX_SOURCE_ID do
+		local source = C_TransmogCollection.GetSourceInfo(i)
+		if source then
+			sources[source.visualID] = sources[source.visualID] or {}
+			tinsert(sources[source.visualID], source)
 		end
-		
-		for i = 1, MAX_SOURCE_ID do
-			local source = C_TransmogCollection.GetSourceInfo(i)
-			if source then
-				visualCache[source.visualID] = visualCache[source.visualID] or {}
-				tinsert(visualCache[source.visualID], source)
-
-				if not hasVisual[source.visualID] then
-					tinsert(catCache[source.categoryID], { -- fake visual
-						isCollected = true,
-						isUsable = true,
-						visualID = source.visualID,
-						uiOrder = source.visualID,
-					})
-					hasVisual[source.visualID] = true
-				end
-			end
-		end
-		
-		local t = {}
-		
-		for k, v in pairs(C_TransmogCollection.GetIllusions()) do
-			v.isCollected = true
-			v.isUsable = true
-			v.uiOrder = v.visualID
-			t[v.visualID] = v
-		end
-		
-		for i = 1, MAX_ILLUSION_ID do
-			local id, name, link = C_TransmogCollection.GetIllusionSourceInfo(i)
-			if id and id > 0 and not t[id] and ItemVisuals[id] then
-				t[id] = {
-					isCollected = true,
-					isUsable = true,
-					sourceID = i,
-					visualID = id,
-					uiOrder = id,
-				}
-			end
-		end
-		
-		for k, v in pairs(ItemVisuals) do
-			if not t[k] then
-				t[k] = {
-					isCollected = true,
-					isUsable = true,
-					visualID = k,
-					uiOrder = k,
-				}
-			end
-		end
-		
-		for k, v in pairs(t) do
-			tinsert(illusionCache, v)
-		end
-		
-		sort(illusionCache, function(a, b)
-			return a.visualID > b.visualID 
-		end)
 	end
+	
+	for _, v in pairs(C_TransmogCollection.GetIllusions()) do
+		v.isCollected = true
+		v.isUsable = true
+		v.uiOrder = v.visualID
+		enchants[v.visualID] = v
+	end
+	
+	for i = 1, MAX_ILLUSION_ID do
+		local id = C_TransmogCollection.GetIllusionSourceInfo(i)
+		if id and id > 0 and not enchants[id] and CM.ItemVisuals[id] then
+			enchants[id] = {
+				isCollected = true,
+				isUsable = true,
+				sourceID = i,
+				visualID = id,
+				uiOrder = id,
+			}
+		end
+	end
+	
+	for k in pairs(CM.ItemVisuals) do
+		if not enchants[k] then
+			enchants[k] = {
+				isCollected = true,
+				isUsable = true,
+				visualID = k,
+				uiOrder = k,
+			}
+		end
+	end
+	
+	for k, v in pairs(enchants) do
+		tinsert(illusions, v)
+	end
+	
+	sort(illusions, function(a, b)
+		return a.visualID > b.visualID 
+	end)
+	
+	return sources, illusions
 end
 
 function f:HookWardrobe()
@@ -232,16 +241,16 @@ function f:HookWardrobe()
 
 	-- appearances
 	function C_TransmogCollection.GetCategoryAppearances(categoryID)
-		return activeSearch and searchAppearanceIDs or catCache[categoryID]
+		return activeSearch and searchAppearanceIDs or cache.CategoryVisuals[categoryID]
 	end
 		
 	function C_TransmogCollection.GetAppearanceSources(appearanceID)
-		return visualCache[appearanceID]
+		return db.SourceInfo[appearanceID]
 	end
 	
 	-- illusions
 	function C_TransmogCollection.GetIllusions()
-		return illusionCache
+		return db.IllusionSourceInfo
 	end
 	
 	-- categories
@@ -290,6 +299,17 @@ function f:HookWardrobe()
 			local pre = model:GetScript("OnEnter")
 			model:SetScript("OnEnter", function(frame) f.Model_OnEnterPrehook(frame, pre) end)
 			model:HookScript("OnEnter", f.Model_OnEnterPosthook)
+			
+			-- sanitize OnEnter handler when scrolling through unlocked illusions
+			local oldOnEnter = model.OnEnter
+			model.OnEnter = function(frame)
+				if frame.visualInfo.sourceID then
+					oldOnEnter(frame)
+				else
+					GameTooltip:ClearLines()
+				end
+				f.Model_OnEnterPosthook(frame)
+			end
 		end
 	end
 	
@@ -302,8 +322,8 @@ function f:HookWardrobe()
 			if #text > 0 then
 				wipe(searchAppearanceIDs)
 				activeSearch = true
-				for _, visuals in pairs(catCache[ItemsCollection:GetActiveCategory()]) do
-					for _, source in pairs(visualCache[visuals.visualID]) do
+				for _, visuals in pairs(cache.CategoryVisuals[ItemsCollection:GetActiveCategory()]) do
+					for _, source in pairs(db.SourceInfo[visuals.visualID]) do
 						-- cache stuff on the go and pray nobody pastes in a whole name instead of typing
 						-- yeah this is disgusting and it doesnt even work properly, gotta rework this
 						if not source.name then
@@ -312,7 +332,7 @@ function f:HookWardrobe()
 							source.quality = newSource.quality
 						end
 						-- also search through texture name
-						if source.name and source.name:lower():find(text) or (FileData[visuals.visualID] or ""):find(text) then
+						if source.name and source.name:lower():find(text) or (CM.ItemAppearance[visuals.visualID] or ""):find(text) then
 							tinsert(searchAppearanceIDs, { -- fake visual
 								isCollected = true,
 								isUsable = true,
@@ -329,7 +349,8 @@ function f:HookWardrobe()
 				activeSearch = false
 			end
 			-- also fixes a blizzard bug:
-			-- when you have an active search from items, and switch to sets then back to items, only the previously shown models get updated
+			--  when you have an active search from items, and switch to sets then back to items,
+			--  only the previously shown models get updated
 			self:UpdateWardrobe()
 			self:UpdateModelCamera() -- need to update model camera only after UpdateWardrobe
 		elseif tab == 2 then -- Sets tab
@@ -348,19 +369,6 @@ function f:HookWardrobe()
 	WardrobeCollectionFrame.searchBox.clearButton:HookScript("OnClick", ClearSearch)
 end
 
-function f:UpdateModelCamera()
-	if not ItemsCollection:GetActiveCategory() then return end
-	
-	for _, model in pairs(ItemsCollection.Models) do
-		if model:IsShown() then
-			-- cant use C_TransmogCollection.GetAppearanceCameraID since it doesnt return an ID for non-class proficiency appearances
-			-- todo: gives an error on when showing to the illusions category
-			local sources = C_TransmogCollection.GetAppearanceSources(model.visualInfo.visualID)
-			Model_ApplyUICamera(model, C_TransmogCollection.GetAppearanceCameraIDBySource(sources[1].sourceID))
-		end
-	end
-end
-
 function f:UpdateWardrobe()
 	if needsModelUpdate then
 		needsModelUpdate = false
@@ -372,6 +380,18 @@ function f:UpdateWardrobe()
 	ItemsCollection:RefreshVisualsList()
 	ItemsCollection:UpdateItems()
 	self.UpdateMouseFocus() -- update tooltip when scrolling
+end
+
+function f:UpdateModelCamera()
+	if not ItemsCollection:GetActiveCategory() then return end
+	
+	for _, model in pairs(ItemsCollection.Models) do
+		if model:IsShown() then
+			-- cant use C_TransmogCollection.GetAppearanceCameraID since it doesnt return an ID for non-class proficiency appearances
+			local sources = C_TransmogCollection.GetAppearanceSources(model.visualInfo.visualID)
+			Model_ApplyUICamera(model, C_TransmogCollection.GetAppearanceCameraIDBySource(sources[1].sourceID))
+		end
+	end
 end
 
 function f.VerifyModels()
@@ -398,7 +418,7 @@ function f.VerifyModels()
 			
 			if reason == Enum.ItemTryOnReason.WrongRace then
 				needsRefresh = true
-				local visuals = catCache[ItemsCollection:GetActiveCategory()]
+				local visuals = cache.CategoryVisuals[ItemsCollection:GetActiveCategory()]
 
 				for k, v in pairs(visuals) do
 					if v.visualID == visualID then
@@ -412,8 +432,11 @@ function f.VerifyModels()
 	
 	f:UpdateWardrobe()
 	
-	-- do anything that would otherwise be overridden by UpdateWardrobe
-	if not needsRefresh and verifyIterations > 1 then
+	if verifyIterations > 25 then
+		VerifyFrame:SetScript("OnUpdate", nil)
+		error("VerifyModels Script ran too long.")
+	elseif not needsRefresh and verifyIterations > 1 then
+		-- do anything that would otherwise be overridden by UpdateWardrobe
 		VerifyFrame:SetScript("OnUpdate", nil)
 		f:OverrideUpdate()
 	end
@@ -422,10 +445,8 @@ end
 function f:OverrideUpdate()
 	for _, model in pairs(ItemsCollection.Models) do
 		if model:IsShown() then
-			local visualID = model.visualInfo.visualID
-			local sources = C_TransmogCollection.GetAppearanceSources(visualID)
+			local sources = C_TransmogCollection.GetAppearanceSources(model.visualInfo.visualID)
 			local reason = ScanningModel:TryOn(sources[1].sourceID)
-			local debugname = model:GetDebugName():match(".+%.(.+)")
 			
 			if reason == Enum.ItemTryOnReason.DataPending then
 				if #sources == 1 then
@@ -450,7 +471,7 @@ end
 function f.UpdateProgressBar()
 	local category = ItemsCollection:GetActiveCategory()
 	if category then
-		local total = #catCache[category]
+		local total = #cache.CategoryVisuals[category]
 		WardrobeCollectionFrame_UpdateProgressBar(total, total)
 	end
 end
@@ -463,16 +484,20 @@ function f.Model_OnEnterPrehook(frame, func)
 end
 
 function f.Model_OnEnterPosthook(frame)
-	if ItemsCollection:GetActiveCategory() then
-		GameTooltip:AddLine(FileData[frame.visualInfo.visualID]) -- appearances
-	else
-		if not GameTooltip:GetOwner() then
-			GameTooltip:SetOwner(frame, "ANCHOR_RIGHT")
+	-- dont update tooltip while unlocking,
+	--  otherwise unlocked illusions are added multiple times to the tooltip
+	if unlocked then
+		if ItemsCollection:GetActiveCategory() then
+			GameTooltip:AddLine(CM.ItemAppearance[frame.visualInfo.visualID]) -- appearances
+		else
+			if not GameTooltip:GetOwner() then
+				GameTooltip:SetOwner(frame, "ANCHOR_RIGHT")
+			end
+			GameTooltip:AddLine(CM.ItemVisuals[frame.visualInfo.visualID]) -- illusions
 		end
-		GameTooltip:AddLine(ItemVisuals[frame.visualInfo.visualID]) -- illusions
+		GameTooltip:AddLine("|cffFFFFFF"..frame.visualInfo.visualID.."|r")
+		GameTooltip:Show()
 	end
-	GameTooltip:AddLine("|cffFFFFFF"..frame.visualInfo.visualID.."|r")
-	GameTooltip:Show()
 end
 
 function f.UpdateMouseFocus()
@@ -492,10 +517,12 @@ function f:LoadFileData(addon)
 			EnableAddOn(addon, true)
 			LoadAddOn(addon)
 		else
+			self:SetScript("OnUpdate", nil)
+			CM:PrintChat(format("The ClickMorphData folder could not be found! If you're using the Github .zip, please use the Curse .zip", version), 1, 1, 0)
 			error(addon..": "..reason)
 		end
 	end
 	
 	local FD = _G[addon]
-	return FD:GetFileData(), FD:GetItemVisuals()
+	return FD:GetItemAppearance(), FD:GetItemVisuals()
 end
