@@ -484,18 +484,23 @@ function f.Model_OnEnterPrehook(frame, func)
 end
 
 function f.Model_OnEnterPosthook(frame)
+	local visualID = frame.visualInfo.visualID
+	
 	-- dont update tooltip while unlocking,
 	--  otherwise unlocked illusions are added multiple times to the tooltip
 	if unlocked then
 		if ItemsCollection:GetActiveCategory() then
-			GameTooltip:AddLine(CM.ItemAppearance[frame.visualInfo.visualID]) -- appearances
+			local source = db.SourceInfo[visualID][1] -- dunno yet how update the tooltip on item cycle
+			GameTooltip:AddLine(CM.ItemAppearance[visualID]) -- appearances
+			GameTooltip:AddDoubleLine("|cffFFFFFF"..visualID.."|r", format("|cff71D5FFitem %d:%d|r", source.itemID, source.itemModID))
 		else
 			if not GameTooltip:GetOwner() then
 				GameTooltip:SetOwner(frame, "ANCHOR_RIGHT")
 			end
-			GameTooltip:AddLine(CM.ItemVisuals[frame.visualInfo.visualID]) -- illusions
+			GameTooltip:AddLine(CM.ItemVisuals[visualID]) -- illusions
+			GameTooltip:AddLine("|cffFFFFFF"..visualID.."|r")
 		end
-		GameTooltip:AddLine("|cffFFFFFF"..frame.visualInfo.visualID.."|r")
+		
 		GameTooltip:Show()
 	end
 end
@@ -518,7 +523,7 @@ function f:LoadFileData(addon)
 			LoadAddOn(addon)
 		else
 			self:SetScript("OnUpdate", nil)
-			CM:PrintChat(format("The ClickMorphData folder could not be found! If you're using the Github .zip, please use the Curse .zip", version), 1, 1, 0)
+			CM:PrintChat(format("The ClickMorphData folder could not be found! If you're using the GitHub .zip, please use the Curse .zip", version), 1, 1, 0)
 			error(addon..": "..reason)
 		end
 	end

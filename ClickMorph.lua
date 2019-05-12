@@ -163,13 +163,24 @@ function CM:MorphMogItCatalogue(frame)
 end
 
 function CM.MorphMogItPreview(frame)
+	local slots = {}
+	
 	-- not sure where mogit stores the preview sourceids, get it from the item instead
 	for _, slot in pairs(frame.parent.slots) do
 		if slot.item then
 			local _, sourceID = C_TransmogCollection.GetItemInfo(slot.item)
 			local source = C_TransmogCollection.GetSourceInfo(sourceID)
-			CM:MorphAppearance(source)
+			local slotId = C_Transmog.GetSlotForInventoryType(source.invType)
+			tinsert(slots, {slotId, source})
 		end
+	end
+	
+	sort(slots, function(a, b)
+		return a[1] < b[1]
+	end)
+	
+	for _, v in pairs(slots) do
+		CM:MorphAppearance(v[2])
 	end
 end
 
