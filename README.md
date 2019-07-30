@@ -10,10 +10,8 @@ ClickMorph (previously ClickMog) expands the usability of [LucidMorph](https://w
 * Supports [Taku's Morph Catalog](https://www.curseforge.com/wow/addons/takus-morph-catalog)
 * Morph from the Inspect window
 
-## Media
-* Morphing enchants: https://gfycat.com/vibrantanotherilladopsis
-* Morphing appearances: https://streamable.com/99bwf
-* Morphing mounts: https://i.gyazo.com/073c0cb128144cc08b17ce5d422e6958.mp4
+## Demo
+* https://streamable.com/5rlll
 
 The appearances tab has to be unlocked manually since it takes around 10~ seconds to load all models after the first run.
 
