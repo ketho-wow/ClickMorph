@@ -15,10 +15,6 @@ ClickMorph (previously ClickMog) expands the usability of [LucidMorph](https://w
 ## Demo
 * https://streamable.com/5rlll
 
-The appearances tab has to be unlocked manually since it takes around 10~ seconds to load all models after the first run.
-
-![](https://i.imgur.com/6DLFBhW.png)
-
 ## To Do
 * Unlock Transmog sets
 * Unlock Titles
