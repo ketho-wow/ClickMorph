@@ -1,11 +1,11 @@
-## Interface: 80100
-## Version: @project-version@
+## Interface: 80200
+## Version: 1.2.0
 ## Title: ClickMorph
-## Notes: Expands functionality for LucidMorph
-## Author: Ketho, Icesythe
+## Notes: Lets you alt-click to morph with jMorph or LucidMorph
+## Author: Ketho, Icesythe7
 ## OptionalDeps: MogIt, TakusMorphCatalog
 
 ClickMorph.lua
 Mount.lua
-Appearance.lua
+Wardrobe.lua
 Inspect.lua

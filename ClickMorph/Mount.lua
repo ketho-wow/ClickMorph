@@ -1,4 +1,3 @@
-
 local CM = ClickMorph
 local f = CreateFrame("Frame")
 
@@ -23,12 +22,9 @@ function f:InitMountJournal()
 			return
 		end
 		active = true
-		
 		self:UnlockMounts()
-		
 		-- modelscene
 		MountJournal.MountDisplay.ModelScene:HookScript("OnMouseUp", CM.MorphMountModelScene)
-		
 		-- scrollframe buttons
 		for _, button in pairs(MountJournal.ListScrollFrame.buttons) do
 			button:HookScript("OnClick", CM.MorphMountScrollFrame)
@@ -39,12 +35,10 @@ end
 function f:UnlockMounts()
 	local mountIDs = C_MountJournal.GetMountIDs()
 	local searchMountIDs, activeSearch = {}
-	
 	-- sort alphabetically
 	sort(mountIDs, function(a, b)
 		local name1, _, _, _, _, _, isFavorite1 = C_MountJournal.GetMountInfoByID(a)
 		local name2, _, _, _, _, _, isFavorite2 = C_MountJournal.GetMountInfoByID(b)
-		
 		-- show favorites first, cant favorite an uncollected mount btw
 		if isFavorite1 ~= isFavorite2 then
 			return isFavorite1
@@ -52,32 +46,31 @@ function f:UnlockMounts()
 			return name1 < name2
 		end
 	end)
-	
+
 	local function GetActiveMountIDs()
 		return activeSearch and searchMountIDs or mountIDs
 	end
-	
+
 	-- replace api, pray nothing explodes
 	function C_MountJournal.GetNumDisplayedMounts()
 		return #GetActiveMountIDs()
 	end
-	
+
 	function C_MountJournal.GetDisplayedMountInfo(index)
 		local ids = GetActiveMountIDs()
 		local args = {C_MountJournal.GetMountInfoByID(ids[index])}
 		args[5] = true -- fake isUsable
 		return unpack(args)
 	end
-	
+
 	-- set mount count fontstring
 	hooksecurefunc("MountJournal_UpdateMountList", self.UpdateMountCount)
 	hooksecurefunc(MountJournal.ListScrollFrame, "update", self.UpdateMountCount) -- OnMouseWheel
 	self.UpdateMountCount()
-	
+
 	-- roll our own search function since default search (server side) is restricted to the normal subset
 	MountJournal.searchBox:HookScript("OnTextChanged", function(self)
 		local text = self:GetText():trim():lower()
-		
 		if #text > 0 then
 			wipe(searchMountIDs)
 			activeSearch = true
@@ -93,12 +86,11 @@ function f:UnlockMounts()
 			activeSearch = false
 		end
 	end)
-	
+
 	local function ClearSearch()
 		wipe(searchMountIDs)
 		activeSearch = false
 	end
-	
 	MountJournal.searchBox:HookScript("OnHide", ClearSearch)
 	MountJournal.searchBox.clearButton:HookScript("OnClick", ClearSearch)
 end

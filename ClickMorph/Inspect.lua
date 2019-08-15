@@ -1,4 +1,3 @@
-
 local CM = ClickMorph
 local f = CreateFrame("Frame")
 
@@ -41,18 +40,16 @@ function f:InitializeInspect()
 			local fullName = GetUnitName(unit, true)
 			local unitLink = TEXT_MODE_A_STRING_DEST_UNIT:format(C_ClassColor.GetClassColor(class):GenerateHexColorMarkup(), UnitGUID(unit), fullName, fullName)
 			CM:PrintChat(format("Morphing to %s", unitLink))
-			
 			local items = {}
-			
-			for _, slot in pairs(InventorySlots) do
-				local itemID, itemModID = GetInventoryItemID(InspectFrame.unit, slot) -- GetInventoryItemID returns the transmogged item
-				local itemLink = GetInventoryItemLink(InspectFrame.unit, slot) -- GetInventoryItemLink returns the actual item (link)
-				
+
+			for _, slotID in pairs(InventorySlots) do
+				local itemID, itemModID = GetInventoryItemID(InspectFrame.unit, slotID) -- GetInventoryItemID returns the transmogged item
+				local itemLink = GetInventoryItemLink(InspectFrame.unit, slotID) -- GetInventoryItemLink returns the actual item (link)
 				if itemID then
 					local _, sourceID = C_TransmogCollection.GetItemInfo(itemID, itemModID)
 					if sourceID then
 						local source = C_TransmogCollection.GetSourceInfo(sourceID)
-						tinsert(items, {slot, source})
+						tinsert(items, {slotID, source})
 					else
 						-- some items dont return a sourceID:
 						-- * some artifacts
@@ -62,14 +59,13 @@ function f:InitializeInspect()
 					end
 				end
 			end
-			
 			-- sort by Inventory Slot
 			sort(items, function(a, b)
 				return a[1] < b[1]
 			end)
-			
+
 			for _, v in pairs(items) do
-				CM:MorphAppearance(v[2])
+				CM:MorphItem("player", v[2])
 			end
 		end
 	end)
