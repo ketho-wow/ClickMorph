@@ -215,7 +215,7 @@ end
 
 function CM:MorphEnchant(unit, slotID, visualID, enchantName)
 	local morph = self:CanMorph()
-	if morph and morph.illusion then
+	if morph and morph.enchant then
 		morph.enchant(unit, slotID, visualID)
 		self:PrintChat(format("Morphed |cffFFFF00%s|r to enchant |cff71D5FF%d|r %s", SlotNames[slotID], visualID, enchantName))
 	end
