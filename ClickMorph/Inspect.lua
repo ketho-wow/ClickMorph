@@ -1,7 +1,7 @@
 local CM = ClickMorph
 local f = CreateFrame("Frame")
 
-local InventorySlots = {
+local InvSlotsOrder = {
 	INVSLOT_HEAD, -- 1
 	INVSLOT_SHOULDER, -- 3
 	INVSLOT_BODY, -- 4
@@ -38,24 +38,36 @@ function f:InitializeInspect()
 			local unit = InspectFrame.unit
 			local class = UnitClassBase(unit)
 			local fullName = GetUnitName(unit, true)
-			local unitLink = TEXT_MODE_A_STRING_DEST_UNIT:format(C_ClassColor.GetClassColor(class):GenerateHexColorMarkup(), UnitGUID(unit), fullName, fullName)
+			local unitLink
+			local hex = select(4, GetClassColor(class))
+			local unitLink = "|c"..TEXT_MODE_A_STRING_DEST_UNIT:format(hex, UnitGUID(unit), fullName, fullName)
 			CM:PrintChat(format("Morphing to %s", unitLink))
 			local items = {}
 
-			for _, slotID in pairs(InventorySlots) do
-				local itemID, itemModID = GetInventoryItemID(InspectFrame.unit, slotID) -- GetInventoryItemID returns the transmogged item
-				local itemLink = GetInventoryItemLink(InspectFrame.unit, slotID) -- GetInventoryItemLink returns the actual item (link)
-				if itemID then
-					local _, sourceID = C_TransmogCollection.GetItemInfo(itemID, itemModID)
-					if sourceID then
-						local source = C_TransmogCollection.GetSourceInfo(sourceID)
-						tinsert(items, {slotID, source})
-					else
-						-- some items dont return a sourceID:
-						-- * some artifacts
-						-- * items with suffixes like "of the Fireflash", mostly with itemModID 5
-						-- * class specific gear, like 157685:0 [Spellsculptor's Leggings]
-						CM:PrintChat(format("Error: Could not find sourceID for inventorySlot %d, itemID %d:%d, %s", slot, itemID, itemModID, itemLink), 1, 1, 0)
+			if CM.isClassic then
+				for _, slotID in pairs(InvSlotsOrder) do
+					local itemLink = GetInventoryItemLink(InspectFrame.unit, slotID)
+					if itemLink then
+						tinsert(items, {slotID, itemLink})
+					end
+				end
+			else
+				for _, slotID in pairs(InvSlotsOrder) do
+					local itemID, itemModID = GetInventoryItemID(InspectFrame.unit, slotID) -- GetInventoryItemID returns the transmogged item
+					local itemLink = GetInventoryItemLink(InspectFrame.unit, slotID) -- GetInventoryItemLink returns the actual item (link)
+					if itemID then
+						local _, sourceID = C_TransmogCollection.GetItemInfo(itemID, itemModID)
+						if sourceID then
+							local source = C_TransmogCollection.GetSourceInfo(sourceID)
+							tinsert(items, {slotID, source})
+						else
+							-- some items dont return a sourceID:
+							-- * some artifacts
+							-- * items with suffixes like "of the Fireflash", mostly with itemModID 5
+							-- * class specific gear, like 157685:0 [Spellsculptor's Leggings]
+							CM:PrintChat(format("Error: Could not find sourceID for inventorySlot %d, itemID %d:%d, %s",
+								slot, itemID, itemModID, itemLink), 1, 1, 0)
+						end
 					end
 				end
 			end
@@ -63,9 +75,14 @@ function f:InitializeInspect()
 			sort(items, function(a, b)
 				return a[1] < b[1]
 			end)
-
-			for _, v in pairs(items) do
-				CM:MorphItem("player", v[2])
+			if CM.isClassic then
+				for _, v in pairs(items) do
+					CM.MorphItemByLink(v[2])
+				end
+			else
+				for _, v in pairs(items) do
+					CM:MorphItemBySource("player", v[2])
+				end
 			end
 		end
 	end)

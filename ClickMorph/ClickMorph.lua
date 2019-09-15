@@ -1,50 +1,97 @@
 ClickMorph = {}
 local CM = ClickMorph
+CM.isClassic = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
 
--- LucidMorph: inventory type -> equipment slot -> slot name
+-- inventory type -> equipment slot -> slot name
 local SlotNames = {
-	[1] = "head",
-	[3] = "shoulder",
-	[4] = "shirt",
-	[5] = "chest",
-	[6] = "belt",
-	[7] = "legs",
-	[8] = "feet",
-	[9] = "wrist",
-	[10] = "hands",
-	[15] = "cloak",
-	[16] = "mainhand",
-	[17] = "offhand",
-	[19] = "tabard",
+	[INVSLOT_HEAD] = "head", -- 1
+	[INVSLOT_SHOULDER] = "shoulder", -- 3
+	[INVSLOT_BODY] = "shirt", -- 4
+	[INVSLOT_CHEST] = "chest", -- 5
+	[INVSLOT_WAIST] = "belt", -- 6
+	[INVSLOT_LEGS] = "legs", -- 7
+	[INVSLOT_FEET] = "feet", -- 8
+	[INVSLOT_WRIST] = "wrist", -- 9
+	[INVSLOT_HAND] = "hands", -- 10
+	[INVSLOT_BACK] = "cloak", -- 15
+	[INVSLOT_MAINHAND] = "mainhand", -- 16
+	[INVSLOT_OFFHAND] = "offhand", -- 17
+	[INVSLOT_TABARD] = "tabard", -- 19
+}
+
+local InvTypeToSlot = {
+	INVTYPE_HEAD = INVSLOT_HEAD, -- 1
+	INVTYPE_SHOULDER = INVSLOT_SHOULDER, -- 3
+	INVTYPE_BODY = INVSLOT_BODY, -- 4
+	INVTYPE_CHEST = INVSLOT_CHEST, -- 5
+	INVTYPE_ROBE = INVSLOT_CHEST, -- 5 (cloth)
+	INVTYPE_WAIST = INVSLOT_WAIST, -- 6
+	INVTYPE_LEGS = INVSLOT_LEGS, -- 7
+	INVTYPE_FEET = INVSLOT_FEET, -- 8
+	INVTYPE_WRIST = INVSLOT_WRIST, -- 9
+	INVTYPE_HAND = INVSLOT_HAND, -- 10
+	INVTYPE_CLOAK = INVSLOT_BACK, -- 15
+	INVTYPE_2HWEAPON = INVSLOT_MAINHAND, -- 16
+	INVTYPE_WEAPONMAINHAND = INVSLOT_MAINHAND, -- 16
+	INVTYPE_WEAPONOFFHAND = INVSLOT_OFFHAND, -- 17
+	INVTYPE_HOLDABLE = INVSLOT_OFFHAND, -- 17
+	INVTYPE_RANGED = INVSLOT_RANGED, -- 18
+	INVTYPE_THROWN = INVSLOT_RANGED, -- 18
+	INVTYPE_RANGEDRIGHT = INVSLOT_RANGED, -- 18
+	INVTYPE_TABARD = INVSLOT_TABARD, -- 19
 }
 
 function CM:PrintChat(msg, r, g, b)
 	DEFAULT_CHAT_FRAME:AddMessage(format("|cff7fff00ClickMorph|r: |r%s", msg), r, g, b)
 end
 
-function CM:GetJMorph()
-	return jMorphLoaded and self.morphers.jMorph
-end
-
-function CM:GetLucidMorph()
-	return lm and self.morphers.LucidMorph
-end
-
 function CM:CanMorph()
 	-- todo: allow manually calling clickmorph functions while not holding alt
 	if IsAltKeyDown() then
-		local morph = self:GetJMorph() or self:GetLucidMorph()
-		if morph then
-			return morph
-		else
-			self:PrintChat("jMorph or LucidMorph is not loaded!", 1, 1, 0)
+		for _, morpher in pairs(self.morphers) do
+			local obj = morpher.get()
+			if obj then
+				return obj
+			end
 		end
+		self:PrintChat("Could not find any morpher!", 1, 1, 0)
+	end
+end
+
+function CM:CanMorphMount()
+	if IsMounted() and not UnitOnTaxi("player") then
+		return true
+	else
+		CM:PrintChat("You need to be mounted and not on a flight path", 1, 1, 0)
 	end
 end
 
 CM.morphers = {
-	jMorph = {
-		model = function(unit, displayID) -- .morph
+	iMorph = { -- classic
+		get = function()
+			return IMorphInfo and CM.morphers.iMorph
+		end,
+		model = function(_, displayID)
+			Morph(displayID)
+		end,
+		race = function(_, raceID, genderID)
+			SetRace(raceID, genderID)
+		end,
+		mount = function(displayID)
+			if CM:CanMorphMount() then
+				SetMount(displayID)
+				return true
+			end
+		end,
+		item = function(_, slotID, itemID)
+			SetItem(slotID, itemID)
+		end,
+	},
+	jMorph = { -- retail
+		get = function()
+			return jMorphLoaded and CM.morphers.jMorph
+		end,
+		model = function(unit, displayID)
 			SetDisplayID(unit, displayID)
 			UpdateModel(unit)
 		end,
@@ -59,12 +106,10 @@ CM.morphers = {
 			UpdateModel(unit)
 		end,
 		mount = function(displayID)
-			SetMountDisplayID("player", displayID)
-			if IsMounted() and not UnitOnTaxi("player") then
+			if CM:CanMorphMount() then
+				SetMountDisplayID("player", displayID)
 				MorphPlayerMount()
 				return true
-			else
-				CM:PrintChat("You need to be mounted and not on a flight path", 1, 1, 0)
 			end
 		end,
 		item = function(unit, slotID, itemID, itemModID)
@@ -92,7 +137,10 @@ CM.morphers = {
 		-- shapeshift
 		-- weather
 	},
-	LucidMorph = {
+	LucidMorph = { -- retail
+		get = function()
+			return lm and CM.morphers.LucidMorph
+		end,
 		model = function(_, displayID)
 			lm("model", displayID)
 			lm("morph")
@@ -141,7 +189,19 @@ function CM.MorphMountScrollFrame(frame)
 	CM:MorphMount("player", mountID)
 end
 
-function CM:MorphItem(unit, source)
+-- Items
+function CM.MorphItemByLink(link)
+	local morph = CM:CanMorph()
+	if morph and morph.item then
+		local itemID = tonumber(link:match("item:(%d+)"))
+		local equipLoc = select(9, GetItemInfo(itemID))
+		morph.item("player", InvTypeToSlot[equipLoc], itemID)
+	end
+end
+
+hooksecurefunc("HandleModifiedItemClick", CM.MorphItemByLink)
+
+function CM:MorphItemBySource(unit, source)
 	local morph = self:CanMorph()
 	if morph and morph.item then
 		local slotID = C_Transmog.GetSlotForInventoryType(source.invType)
@@ -204,76 +264,8 @@ function CM.MorphTransmogItem(frame)
 		for idx, source in pairs(sources) do
 			-- get the index the arrow is pointing at
 			if idx == WardrobeCollectionFrame.tooltipSourceIndex then
-				CM:MorphItem("player", source)
+				CM:MorphItemBySource("player", source)
 			end
-		end
-	end
-end
-
--- MogIt
-if IsAddOnLoaded("MogIt") then
-	hooksecurefunc(MogIt, "UpdateGUI", function(frame, resize)
-		if not resize then -- models have been initialized
-			for _, model in pairs(MogIt.models) do
-				local oldOnClick = model:GetScript("OnClick")
-				model:SetScript("OnClick", function(frame, button)
-					-- prevent cycling through items when pressing alt
-					if IsAltKeyDown() then
-						CM:MorphMogItCatalogue(frame)
-					else
-						oldOnClick(frame, button)
-					end
-				end)
-			end
-		end
-	end)
-	hooksecurefunc(MogIt, "CreatePreview", function()
-		for _, prev in pairs(MogIt.previews) do
-			prev.model:HookScript("OnClick", CM.MorphMogItPreview)
-		end
-	end)
-end
-
-function CM:MorphMogItCatalogue(frame)
-	local data = frame.data
-	local source = C_TransmogCollection.GetSourceInfo(data.value[data.cycle])
-	self:MorphItem("player", source)
-end
-
-function CM.MorphMogItPreview(frame)
-	local slots = {}
-	-- not sure where mogit stores the preview sourceids, get it from the item instead
-	for _, slot in pairs(frame.parent.slots) do
-		if slot.item then
-			local _, sourceID = C_TransmogCollection.GetItemInfo(slot.item)
-			local source = C_TransmogCollection.GetSourceInfo(sourceID)
-			local slotId = C_Transmog.GetSlotForInventoryType(source.invType)
-			tinsert(slots, {slotId, source})
-		end
-	end
-
-	sort(slots, function(a, b)
-		return a[1] < b[1]
-	end)
-	for _, v in pairs(slots) do
-		CM:MorphItem("player", v[2])
-	end
-end
-
--- Taku's Morph Catalog
-if IsAddOnLoaded("TakusMorphCatalog") then
-	for _, child in pairs({UIParent:GetChildren()}) do
-		if child.Collection and child.ModelPreview then -- found TMCFrame
-			local oldOnClick = child.ModelPreview:GetScript("OnMouseDown")
-			child.ModelPreview:SetScript("OnMouseDown", function(frame, button)
-				-- dont click the frame away if morphing
-				if IsAltKeyDown() then
-					CM:MorphModel("player", frame.ModelFrame.DisplayInfo)
-				else
-					oldOnClick(frame)
-				end
-			end)
-			break
 		end
 	end
 end

@@ -1,4 +1,6 @@
 local CM = ClickMorph
+if CM.isClassic then return end
+
 local f = CreateFrame("Frame")
 
 local active
@@ -22,13 +24,26 @@ function f:InitMountJournal()
 			return
 		end
 		active = true
-		self:UnlockMounts()
+		self:CreateUnlockButton()
 		-- modelscene
 		MountJournal.MountDisplay.ModelScene:HookScript("OnMouseUp", CM.MorphMountModelScene)
 		-- scrollframe buttons
 		for _, button in pairs(MountJournal.ListScrollFrame.buttons) do
 			button:HookScript("OnClick", CM.MorphMountScrollFrame)
 		end
+	end)
+end
+
+function f:CreateUnlockButton()
+	local btn = CreateFrame("Button", nil, MountJournal, "UIPanelButtonTemplate")
+	btn:SetPoint("LEFT", MountJournal.MountCount, "RIGHT", 5, 0) -- topleft corner of the frame
+	btn:SetWidth(100)
+	btn:SetText(UNLOCK)
+
+	btn:SetScript("OnClick", function(frame)
+		startupUnlockTime = time()
+		self:UnlockMounts()
+		frame:Hide()
 	end)
 end
 

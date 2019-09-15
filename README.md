@@ -1,8 +1,8 @@
 ClickMorph lets you alt-click to morph with [jMorph](https://www.ownedcore.com/forums/world-of-warcraft/world-of-warcraft-bots-programs/795619-jmorph-tmorph-morpher-recreated.html) or [LucidMorph](https://www.ownedcore.com/forums/world-of-warcraft/world-of-warcraft-bots-programs/657637-lucid-morph-basic-morphing-tool.html).
 
 ## Install
-* Download the latest [master](https://github.com/ketho-wow/ClickMorph/archive/master.zip) or release zip.
-* Open `ClickMorph-master` and copy or unpack `ClickMorph` and `ClickMorphData` into your addons folder:  
+* Download the latest [release](https://github.com/ketho-wow/ClickMorph/releases) zip for Classic or Retail.
+* unpack `ClickMorph` and `ClickMorphData` into your addons folder:  
 `C:\Program Files (x86)\World of Warcraft\_retail_\Interface\AddOns`
 
 ![](https://i.imgur.com/EfiL7aQ.png)

@@ -1,5 +1,7 @@
 -- the unlocked wardrobe is kind of buggy and messy
 local CM = ClickMorph
+if CM.isClassic then return end
+
 local db
 local cache = {}
 
