@@ -35,6 +35,7 @@ end
 function f:InitializeInspect()
 	InspectModelFrame:HookScript("OnMouseUp", function()
 		if IsAltKeyDown() then
+			CM:ResetMorph()
 			local unit = InspectFrame.unit
 			local class = UnitClassBase(unit)
 			local fullName = GetUnitName(unit, true)

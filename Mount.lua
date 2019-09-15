@@ -2,7 +2,6 @@ local CM = ClickMorph
 if CM.isClassic then return end
 
 local f = CreateFrame("Frame")
-
 local active
 
 if IsAddOnLoaded("Blizzard_Collections") then
@@ -39,9 +38,7 @@ function f:CreateUnlockButton()
 	btn:SetPoint("LEFT", MountJournal.MountCount, "RIGHT", 5, 0) -- topleft corner of the frame
 	btn:SetWidth(100)
 	btn:SetText(UNLOCK)
-
 	btn:SetScript("OnClick", function(frame)
-		startupUnlockTime = time()
 		self:UnlockMounts()
 		frame:Hide()
 	end)

@@ -49,9 +49,8 @@ function CM:CanMorph()
 	-- todo: allow manually calling clickmorph functions while not holding alt
 	if IsAltKeyDown() then
 		for _, morpher in pairs(self.morphers) do
-			local obj = morpher.get()
-			if obj then
-				return obj
+			if morpher.loaded() then
+				return morpher
 			end
 		end
 		self:PrintChat("Could not find any morpher!", 1, 1, 0)
@@ -68,8 +67,10 @@ end
 
 CM.morphers = {
 	iMorph = { -- classic
-		get = function()
-			return IMorphInfo and CM.morphers.iMorph
+		-- morphers can be unloaded and initialized at a later moment
+		loaded = function() return IMorphInfo end,
+		reset = function() -- todo: add reset to naked
+			Reset()
 		end,
 		model = function(_, displayID)
 			Morph(displayID)
@@ -86,10 +87,19 @@ CM.morphers = {
 		item = function(_, slotID, itemID)
 			SetItem(slotID, itemID)
 		end,
+		--SetEnchant(slotId, enchantId)
+		--SetTitle(titleId)
+		--SetMedal(medalId)
+		--SetFace(face)
+		--SetFeatures(feature)
+		--SetHairStyle(style)
+		--SetHairColor(color)
+		--SetSkinColor(color)
 	},
 	jMorph = { -- retail
-		get = function()
-			return jMorphLoaded and CM.morphers.jMorph
+		loaded = function() return jMorphLoaded end,
+		update = function(unit)
+			UpdateModel(unit)
 		end,
 		model = function(unit, displayID)
 			SetDisplayID(unit, displayID)
@@ -116,9 +126,6 @@ CM.morphers = {
 			SetVisibleItem(unit, slotID, itemID, itemModID)
 			-- dont automatically update for every item in an item set
 		end,
-		update = function(unit)
-			UpdateModel(unit)
-		end,
 		enchant = function(unit, slotID, visualID)
 			SetVisibleEnchant(unit, slotID, visualID)
 			UpdateModel(unit)
@@ -138,9 +145,7 @@ CM.morphers = {
 		-- weather
 	},
 	LucidMorph = { -- retail
-		get = function()
-			return lm and CM.morphers.LucidMorph
-		end,
+		loaded = function() return lm end,
 		model = function(_, displayID)
 			lm("model", displayID)
 			lm("morph")
@@ -162,6 +167,13 @@ CM.morphers = {
 		end,
 	},
 }
+
+function CM:ResetMorph()
+	local morph = self:CanMorph()
+	if morph and morph.reset then
+		morph.reset()
+	end
+end
 
 -- Mounts
 function CM:MorphMount(unit, mountID)
@@ -192,7 +204,7 @@ end
 -- Items
 function CM.MorphItemByLink(link)
 	local morph = CM:CanMorph()
-	if morph and morph.item then
+	if link and morph and morph.item then
 		local itemID = tonumber(link:match("item:(%d+)"))
 		local equipLoc = select(9, GetItemInfo(itemID))
 		morph.item("player", InvTypeToSlot[equipLoc], itemID)
