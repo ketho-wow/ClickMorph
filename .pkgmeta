@@ -1,0 +1,7 @@
+package-as: ClickMorph
+
+move-folders:
+  ClickMorph/Data: ClickMorphData
+
+ignore:
+    - README.md
