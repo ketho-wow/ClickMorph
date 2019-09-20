@@ -6,10 +6,10 @@ It's _not_ standalone, you still need to inject the morpher's DLL first
 * Unpack *ClickMorph* and *ClickMorphData* into your addons folder:  
 `C:\Program Files (x86)\World of Warcraft\_classic_\Interface\AddOns`
 
-![](https://i.imgur.com/EfiL7aQ.png)
+![](https://i.imgur.com/3clJHLW.pngg)
 
 ## Features
-Video: https://streamable.com/5rlll
+Videos: https://streamable.com/5rlll (Retail), https://streamable.com/m601s (Classic)
 * Morph from unlocked Mounts and Appearances (Wardrobe) tab
 * Morph from the inspect window and item links/containers
 * Supports [MogIt](https://www.curseforge.com/wow/addons/mogit) and [Taku's Morph Catalog](https://www.curseforge.com/wow/addons/takus-morph-catalog)
