@@ -9,7 +9,7 @@ It's _not_ standalone, you still need to inject the morpher's DLL first
 ![](https://i.imgur.com/3clJHLW.pngg)
 
 ## Features
-Videos: https://streamable.com/5rlll (Retail), https://streamable.com/m601s (Classic)
+Videos: https://streamable.com/m601s (Classic), https://streamable.com/5rlll (Retail)
 * Morph from unlocked Mounts and Appearances (Wardrobe) tab
 * Morph from the inspect window and item links/containers
 * Supports [MogIt](https://www.curseforge.com/wow/addons/mogit) and [Taku's Morph Catalog](https://www.curseforge.com/wow/addons/takus-morph-catalog)
