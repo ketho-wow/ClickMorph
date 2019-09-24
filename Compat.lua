@@ -7,9 +7,11 @@ local addons = {
 }
 
 function OnEvent(self, event, isInitialLogin, isReloadingUi)
-	for _, addon in pairs(addons) do
-		if IsAddOnLoaded(addon) then
-			CM["Hook"..addon](CM)
+	if isInitialLogin or isReloadingUi then
+		for _, addon in pairs(addons) do
+			if IsAddOnLoaded(addon) then
+				CM["Hook"..addon](CM)
+			end
 		end
 	end
 end
