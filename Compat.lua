@@ -86,8 +86,15 @@ function CM:HookTakusMorphCatalog()
 	end
 end
 
+local shownAtlasLootMessage
+
 function CM:HookAtlasLootClassic()
-	self:PrintChat("For AtlasLoot you need to press |cff71D5FFAlt+Shift|r while clicking")
+	_G["AtlasLoot_GUI-Frame"]:HookScript("OnShow", function()
+		if not shownAtlasLootMessage then
+			self:PrintChat("For AtlasLoot you need to press |cff71D5FFAlt+Shift|r while clicking")
+			shownAtlasLootMessage = true
+		end
+	end)
 	for i = 1, 30 do
 		local btn = _G["AtlasLoot_Button_"..i]
 		local origOnClick = btn:GetScript("OnClick")

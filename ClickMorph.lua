@@ -37,11 +37,24 @@ local InvTypeToSlot = {
 	INVTYPE_WEAPONMAINHAND = INVSLOT_MAINHAND, -- 16
 	INVTYPE_WEAPONOFFHAND = INVSLOT_OFFHAND, -- 17
 	INVTYPE_HOLDABLE = INVSLOT_OFFHAND, -- 17
-	INVTYPE_RANGED = INVSLOT_OFFHAND, -- 17 -- 18 (INVSLOT_RANGED)
-	INVTYPE_THROWN = INVSLOT_OFFHAND, -- 17 -- 18
-	INVTYPE_RANGEDRIGHT = INVSLOT_OFFHAND, -- 17 -- 18
+	INVTYPE_RANGED = INVSLOT_RANGED, -- 18
+	INVTYPE_THROWN = INVSLOT_RANGED, -- 18
+	INVTYPE_RANGEDRIGHT = INVSLOT_RANGED, -- 18
 	INVTYPE_SHIELD = INVSLOT_OFFHAND, -- 17
 	INVTYPE_TABARD = INVSLOT_TABARD, -- 19
+}
+
+local GearSlots = {
+	INVSLOT_HEAD, -- 1
+	INVSLOT_SHOULDER, -- 3
+	INVSLOT_BODY, -- 4
+	INVSLOT_CHEST, -- 5
+	INVSLOT_WAIST, -- 6
+	INVSLOT_LEGS, -- 7
+	INVSLOT_FEET, -- 8
+	INVSLOT_WRIST, -- 9
+	INVSLOT_HAND, -- 10
+	INVSLOT_BACK, -- 15
 }
 
 function CM:PrintChat(msg, r, g, b)
@@ -306,10 +319,11 @@ end
 function CM:MorphItemSet(itemSetID)
 	local morph = CM:CanMorph()
 	if morph then
-		-- as of 09.24 imorph doesnt reset to naked when morphing sets
-		-- at least reset back to your current gear
-		if morph.reset then
-			morph.reset()
+		-- todo: only do it for gear item sets instead of weapon sets
+		if morph.item then -- reset gear to naked first
+			for _, slot in pairs(GearSlots) do
+				morph.item("player", slot, 0)
+			end
 		end
 		if morph.itemset then
 			morph.itemset(itemSetID)
