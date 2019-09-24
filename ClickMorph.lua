@@ -16,6 +16,7 @@ local SlotNames = {
 	[INVSLOT_BACK] = "cloak", -- 15
 	[INVSLOT_MAINHAND] = "mainhand", -- 16
 	[INVSLOT_OFFHAND] = "offhand", -- 17
+	[INVSLOT_RANGED] = "ranged", -- 18
 	[INVSLOT_TABARD] = "tabard", -- 19
 }
 
@@ -32,12 +33,14 @@ local InvTypeToSlot = {
 	INVTYPE_HAND = INVSLOT_HAND, -- 10
 	INVTYPE_CLOAK = INVSLOT_BACK, -- 15
 	INVTYPE_2HWEAPON = INVSLOT_MAINHAND, -- 16
+	INVTYPE_WEAPON = INVSLOT_MAINHAND, -- 17
 	INVTYPE_WEAPONMAINHAND = INVSLOT_MAINHAND, -- 16
 	INVTYPE_WEAPONOFFHAND = INVSLOT_OFFHAND, -- 17
 	INVTYPE_HOLDABLE = INVSLOT_OFFHAND, -- 17
-	INVTYPE_RANGED = INVSLOT_RANGED, -- 18
-	INVTYPE_THROWN = INVSLOT_RANGED, -- 18
-	INVTYPE_RANGEDRIGHT = INVSLOT_RANGED, -- 18
+	INVTYPE_RANGED = INVSLOT_OFFHAND, -- 17 -- 18 (INVSLOT_RANGED)
+	INVTYPE_THROWN = INVSLOT_OFFHAND, -- 17 -- 18
+	INVTYPE_RANGEDRIGHT = INVSLOT_OFFHAND, -- 17 -- 18
+	INVTYPE_SHIELD = INVSLOT_OFFHAND, -- 17
 	INVTYPE_TABARD = INVSLOT_TABARD, -- 19
 }
 
@@ -86,6 +89,9 @@ CM.morphers = {
 		end,
 		item = function(_, slotID, itemID)
 			SetItem(slotID, itemID)
+		end,
+		itemset = function(itemSetID) -- handled in iMorph Lua
+			SetItemSet(itemSetID)
 		end,
 		--SetEnchant(slotId, enchantId)
 		--SetTitle(titleId)
@@ -202,16 +208,31 @@ function CM.MorphMountScrollFrame(frame)
 end
 
 -- Items
-function CM.MorphItemByLink(link)
-	local morph = CM:CanMorph()
-	if link and morph and morph.item then
-		local itemID = tonumber(link:match("item:(%d+)"))
+function CM:GetItemInfo(item)
+	-- try to preserve item link if we receive one
+	if type(item) == "string" then
+		local itemID = tonumber(item:match("item:(%d+)"))
 		local equipLoc = select(9, GetItemInfo(itemID))
-		morph.item("player", InvTypeToSlot[equipLoc], itemID)
+		return itemID, item, equipLoc
+	else
+		local itemLink, _, _, _, _, _, _, equipLoc = select(2, GetItemInfo(item))
+		return item, itemLink, equipLoc
 	end
 end
 
-hooksecurefunc("HandleModifiedItemClick", CM.MorphItemByLink)
+function CM.MorphItem(item)
+	local morph = CM:CanMorph()
+	if item and morph and morph.item then
+		local itemID, itemLink, equipLoc = CM:GetItemInfo(item)
+		local slotID = InvTypeToSlot[equipLoc]
+		if slotID then
+			morph.item("player", slotID, itemID)
+			CM:PrintChat(format("Morphed |cffFFFF00%s|r to item |cff71D5FF%d:%d|r %s", SlotNames[slotID], itemID, 0, itemLink))
+		end
+	end
+end
+
+hooksecurefunc("HandleModifiedItemClick", CM.MorphItem)
 
 function CM:MorphItemBySource(unit, source)
 	local morph = self:CanMorph()
@@ -278,6 +299,20 @@ function CM.MorphTransmogItem(frame)
 			if idx == WardrobeCollectionFrame.tooltipSourceIndex then
 				CM:MorphItemBySource("player", source)
 			end
+		end
+	end
+end
+
+function CM:MorphItemSet(itemSetID)
+	local morph = CM:CanMorph()
+	if morph then
+		-- as of 09.24 imorph doesnt reset to naked when morphing sets
+		-- at least reset back to your current gear
+		if morph.reset then
+			morph.reset()
+		end
+		if morph.itemset then
+			morph.itemset(itemSetID)
 		end
 	end
 end

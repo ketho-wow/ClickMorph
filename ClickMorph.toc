@@ -8,7 +8,6 @@
 ## Title: ClickMorph
 ## Notes: Lets you alt-click to morph
 ## Author: Ketho, Icesythe7
-## OptionalDeps: MogIt, TakusMorphCatalog
 
 ClickMorph.lua
 Mount.lua

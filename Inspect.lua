@@ -78,7 +78,7 @@ function f:InitializeInspect()
 			end)
 			if CM.isClassic then
 				for _, v in pairs(items) do
-					CM.MorphItemByLink(v[2])
+					CM.MorphItem(v[2])
 				end
 			else
 				for _, v in pairs(items) do

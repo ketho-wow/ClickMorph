@@ -1,7 +1,24 @@
 local CM = ClickMorph
 
--- MogIt
-if IsAddOnLoaded("MogIt") then
+local addons = {
+	"MogIt",
+	"TakusMorphCatalog",
+	"AtlasLootClassic",
+}
+
+function OnEvent(self, event, isInitialLogin, isReloadingUi)
+	for _, addon in pairs(addons) do
+		if IsAddOnLoaded(addon) then
+			CM["Hook"..addon](CM)
+		end
+	end
+end
+
+local f = CreateFrame("Frame")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:SetScript("OnEvent", OnEvent)
+
+function CM:HookMogIt()
 	hooksecurefunc(MogIt, "UpdateGUI", function(frame, resize)
 		if not resize then -- models have been initialized
 			for _, model in pairs(MogIt.models) do
@@ -9,7 +26,7 @@ if IsAddOnLoaded("MogIt") then
 				model:SetScript("OnClick", function(frame, button)
 					-- prevent cycling through items when pressing alt
 					if IsAltKeyDown() then
-						CM:MorphMogItCatalogue(frame)
+						self:MorphMogItCatalogue(frame)
 					else
 						oldOnClick(frame, button)
 					end
@@ -50,20 +67,39 @@ function CM.MorphMogItPreview(frame)
 	end
 end
 
--- Taku's Morph Catalog
-if IsAddOnLoaded("TakusMorphCatalog") then
+function CM:HookTakusMorphCatalog()
 	for _, child in pairs({UIParent:GetChildren()}) do
 		if child.Collection and child.ModelPreview then -- found TMCFrame
 			local oldOnClick = child.ModelPreview:GetScript("OnMouseDown")
 			child.ModelPreview:SetScript("OnMouseDown", function(frame, button)
 				-- dont click the frame away if morphing
 				if IsAltKeyDown() then
-					CM:MorphModel("player", frame.ModelFrame.DisplayInfo)
+					self:MorphModel("player", frame.ModelFrame.DisplayInfo)
 				else
-					oldOnClick(frame)
+					oldOnClick(frame, button)
 				end
 			end)
 			break
 		end
+	end
+end
+
+function CM:HookAtlasLootClassic()
+	self:PrintChat("For AtlasLoot you need to press |cff71D5FFAlt+Shift|r while clicking")
+	for i = 1, 30 do
+		local btn = _G["AtlasLoot_Button_"..i]
+		local origOnClick = btn:GetScript("OnClick")
+		btn:SetScript("OnClick", function(frame, button, down)
+			if IsAltKeyDown() and IsShiftKeyDown() then
+				if type(frame.SetID) == "number" then
+					-- delegate to iMorph .itemset instead of iterating over items field
+					self:MorphItemSet(frame.SetID)
+				elseif frame.ItemID then
+					self.MorphItem(frame.ItemID)
+				end
+			else
+				origOnClick(frame, button, down)
+			end
+		end)
 	end
 end
