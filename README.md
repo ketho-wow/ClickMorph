@@ -12,6 +12,6 @@ It's _not_ standalone, you still need to inject the morpher's DLL first
 Videos: https://streamable.com/m601s (Classic), https://streamable.com/5rlll (Retail)
 * Morph from unlocked Mounts and Appearances (Wardrobe) tab
 * Morph from the inspect window and item links/containers
-* Supports [MogIt](https://www.curseforge.com/wow/addons/mogit) and [Taku's Morph Catalog](https://www.curseforge.com/wow/addons/takus-morph-catalog)
+* Supports [AtlasLoot Classic](https://www.curseforge.com/wow/addons/atlaslootclassic), [MogIt](https://www.curseforge.com/wow/addons/mogit) and [Taku's Morph Catalog](https://www.curseforge.com/wow/addons/takus-morph-catalog)
 
 *Credits to [Icesythe7](https://www.ownedcore.com/forums/world-of-warcraft/world-of-warcraft-general/wow-ui-macros-talent-specs/785473-clickmog-addon-lucidmorph.html) for originally developing the addon.*
