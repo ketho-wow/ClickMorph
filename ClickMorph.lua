@@ -20,6 +20,7 @@ local SlotNames = {
 	[INVSLOT_TABARD] = "tabard", -- 19
 }
 
+-- https://wow.gamepedia.com/Enum_Item.InventoryType
 local InvTypeToSlot = {
 	INVTYPE_HEAD = INVSLOT_HEAD, -- 1
 	INVTYPE_SHOULDER = INVSLOT_SHOULDER, -- 3
@@ -55,6 +56,11 @@ local GearSlots = {
 	INVSLOT_WRIST, -- 9
 	INVSLOT_HAND, -- 10
 	INVSLOT_BACK, -- 15
+}
+
+local AltenateWeaponSlot = {
+	[INVSLOT_MAINHAND] = INVSLOT_OFFHAND,
+	[INVSLOT_OFFHAND] = INVSLOT_MAINHAND,
 }
 
 function CM:PrintChat(msg, r, g, b)
@@ -233,12 +239,21 @@ function CM:GetItemInfo(item)
 	end
 end
 
+local lastWeaponSlot
+
 function CM.MorphItem(item)
 	local morph = CM:CanMorph()
 	if item and morph and morph.item then
 		local itemID, itemLink, equipLoc = CM:GetItemInfo(item)
 		local slotID = InvTypeToSlot[equipLoc]
 		if slotID then
+			-- not sure how to implement alternating between mh/oh
+			if equipLoc:find("INVTYPE_WEAPON") then
+				if lastWeaponSlot then
+					slotID = AltenateWeaponSlot[lastWeaponSlot]
+				end
+				lastWeaponSlot = slotID
+			end
 			morph.item("player", slotID, itemID)
 			CM:PrintChat(format("Morphed |cffFFFF00%s|r to item |cff71D5FF%d:%d|r %s", SlotNames[slotID], itemID, 0, itemLink))
 		end
