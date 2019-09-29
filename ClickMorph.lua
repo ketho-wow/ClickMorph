@@ -58,6 +58,13 @@ local GearSlots = {
 	INVSLOT_BACK, -- 15
 }
 
+local DualWieldSlot = {
+	INVTYPE_2HWEAPON = true,
+	INVTYPE_WEAPON = true,
+	INVTYPE_WEAPONMAINHAND = true,
+	INVTYPE_WEAPONOFFHAND = true,
+}
+
 local AltenateWeaponSlot = {
 	[INVSLOT_MAINHAND] = INVSLOT_OFFHAND,
 	[INVSLOT_OFFHAND] = INVSLOT_MAINHAND,
@@ -247,8 +254,7 @@ function CM.MorphItem(item)
 		local itemID, itemLink, equipLoc = CM:GetItemInfo(item)
 		local slotID = InvTypeToSlot[equipLoc]
 		if slotID then
-			-- not sure how to implement alternating between mh/oh
-			if equipLoc:find("INVTYPE_WEAPON") then
+			if IsSpellKnown(674) and DualWieldSlot[equipLoc] then -- Rogue/Warrior/Hunter Dual Wield
 				if lastWeaponSlot then
 					slotID = AltenateWeaponSlot[lastWeaponSlot]
 				end
