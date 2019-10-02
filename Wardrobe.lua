@@ -137,7 +137,7 @@ end
 function f:UnlockWardrobe()
 	if not unlocked then
 		-- Load On Demand data from DBCs
-		CM.ItemAppearance, CM.ItemVisuals = self:LoadFileData("ClickMorphData")
+		CM.ItemAppearance, CM.ItemVisuals = CM:LoadFileData("ClickMorphData", self)
 		self:InitializeData()
 		self:HookWardrobe()
 		self:UpdateWardrobe() -- initial update
@@ -499,20 +499,4 @@ function f.UpdateMouseFocus()
 			focus:GetScript("OnEnter")(focus)
 		end
 	end
-end
-
-function f:LoadFileData(addon)
-	local loaded, reason = LoadAddOn(addon)
-	if not loaded then
-		if reason == "DISABLED" then
-			EnableAddOn(addon, true)
-			LoadAddOn(addon)
-		else
-			self:SetScript("OnUpdate", nil)
-			CM:PrintChat(format("The ClickMorphData folder could not be found! If you're using the GitHub .zip, please use the Curse .zip", version), 1, 1, 0)
-			error(addon..": "..reason)
-		end
-	end
-	local FD = _G[addon]
-	return FD:GetItemAppearance(), FD:GetItemVisuals()
 end

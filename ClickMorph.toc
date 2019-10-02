@@ -13,4 +13,5 @@ ClickMorph.lua
 Mount.lua
 Wardrobe.lua
 Inspect.lua
+NPC.lua
 Compat.lua

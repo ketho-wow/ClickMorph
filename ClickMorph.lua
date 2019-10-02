@@ -74,9 +74,24 @@ function CM:PrintChat(msg, r, g, b)
 	DEFAULT_CHAT_FRAME:AddMessage(format("|cff7fff00ClickMorph|r: |r%s", msg), r, g, b)
 end
 
-function CM:CanMorph()
-	-- todo: allow manually calling clickmorph functions while not holding alt
-	if IsAltKeyDown() then
+function CM:LoadFileData(addon, frame)
+	local loaded, reason = LoadAddOn(addon)
+	if not loaded then
+		if reason == "DISABLED" then
+			EnableAddOn(addon, true)
+			LoadAddOn(addon)
+		else
+			frame:SetScript("OnUpdate", nil) -- cancel wardrobe timer
+			self:PrintChat("The ClickMorphData folder could not be found!", 1, 1, 0)
+			error(addon..": "..reason)
+		end
+	end
+	local fd = _G[addon]
+	return fd:GetItemAppearance(), fd:GetItemVisuals(), fd:GetNpcDisplayIdsClassic()
+end
+
+function CM:CanMorph(override)
+	if IsAltKeyDown() or override then
 		for _, morpher in pairs(self.morphers) do
 			if morpher.loaded() then
 				return morpher
@@ -96,7 +111,7 @@ end
 
 CM.morphers = {
 	iMorph = { -- classic
-		-- morphers can be unloaded and initialized at a later moment
+		-- morphers can be unloaded and initialized at any later moment
 		loaded = function() return IMorphInfo end,
 		reset = function() -- todo: add reset to naked
 			Reset()
@@ -254,7 +269,7 @@ function CM.MorphItem(item)
 		local itemID, itemLink, equipLoc = CM:GetItemInfo(item)
 		local slotID = InvTypeToSlot[equipLoc]
 		if slotID then
-			if IsSpellKnown(674) and DualWieldSlot[equipLoc] then -- Rogue/Warrior/Hunter Dual Wield
+			if DualWieldSlot[equipLoc] and IsSpellKnown(674) then -- Rogue/Warrior/Hunter Dual Wield
 				if lastWeaponSlot then
 					slotID = AltenateWeaponSlot[lastWeaponSlot]
 				end
@@ -288,11 +303,15 @@ function CM:MorphEnchant(unit, slotID, visualID, enchantName)
 	end
 end
 
-function CM:MorphModel(unit, displayID)
-	local morph = self:CanMorph()
+function CM:MorphModel(unit, displayID, npcID, npcName, override)
+	local morph = self:CanMorph(override)
 	if morph and morph.model then
 		morph.model(unit, displayID)
-		self:PrintChat(format("Morphed to model |cff71D5FF%d|r", displayID))
+		if npcID and npcName then
+			self:PrintChat(format("Morphed to NPC |cffFFFF00%d|r, model |cff71D5FF%d|r, %s", npcID, displayID, npcName))
+		else
+			self:PrintChat(format("Morphed to model |cff71D5FF%d|r, %s", displayID))
+		end
 	end
 end
 
@@ -340,8 +359,8 @@ end
 function CM:MorphItemSet(itemSetID)
 	local morph = CM:CanMorph()
 	if morph then
-		-- todo: only do it for gear item sets instead of weapon sets
 		if morph.item then -- reset gear to naked first
+			-- todo: only do it for gear item sets instead of weapon sets
 			for _, slot in pairs(GearSlots) do
 				morph.item("player", slot, 0)
 			end
