@@ -114,7 +114,11 @@ CM.morphers = {
 		-- morphers can be unloaded and initialized at any later moment
 		loaded = function() return IMorphInfo end,
 		reset = function() -- todo: add reset to naked
-			Reset()
+			if iMorphFrame.Reset then
+				iMorphFrame:Reset()
+			else
+				Reset()
+			end
 		end,
 		model = function(_, displayID)
 			Morph(displayID)
@@ -132,7 +136,11 @@ CM.morphers = {
 			SetItem(slotID, itemID)
 		end,
 		itemset = function(itemSetID) -- handled in iMorph Lua
-			SetItemSet(itemSetID)
+			if iMorphFrame.SetItemSet then
+				iMorphFrame:SetItemSet(itemSetID)
+			else
+				SetItemSet(itemSetID)
+			end
 		end,
 		--SetEnchant(slotId, enchantId)
 		--SetTitle(titleId)
