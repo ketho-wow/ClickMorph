@@ -87,6 +87,7 @@ function CM:HookTakusMorphCatalog()
 end
 
 local shownAtlasLootMessage
+local SEC_BUTTON_COUNT = 0
 
 function CM:HookAtlasLootClassic()
 	_G["AtlasLoot_GUI-Frame"]:HookScript("OnShow", function()
@@ -95,6 +96,7 @@ function CM:HookAtlasLootClassic()
 			shownAtlasLootMessage = true
 		end
 	end)
+	-- items / itemsets
 	for i = 1, 30 do
 		local btn = _G["AtlasLoot_Button_"..i]
 		local origOnClick = btn:GetScript("OnClick")
@@ -111,4 +113,19 @@ function CM:HookAtlasLootClassic()
 			end
 		end)
 	end
+	-- itemset items
+	hooksecurefunc(AtlasLoot.Button, "CreateSecOnly", function()
+		SEC_BUTTON_COUNT = SEC_BUTTON_COUNT + 1
+		local btn = _G["AtlasLoot_SecButton_"..SEC_BUTTON_COUNT]
+		local origOnClick = btn:GetScript("OnClick")
+		btn:SetScript("OnClick", function(frame, button, down)
+			if IsAltKeyDown() and IsShiftKeyDown() then
+				if frame.ItemID then
+					self.MorphItem(frame.ItemID)
+				end
+			else
+				origOnClick(frame, button, down)
+			end
+		end)
+	end)
 end
