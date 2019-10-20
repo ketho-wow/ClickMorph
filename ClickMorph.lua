@@ -318,7 +318,7 @@ function CM:MorphModel(unit, displayID, npcID, npcName, override)
 		if npcID and npcName then
 			self:PrintChat(format("Morphed to NPC |cffFFFF00%d|r, model |cff71D5FF%d|r, %s", npcID, displayID, npcName))
 		else
-			self:PrintChat(format("Morphed to model |cff71D5FF%d|r, %s", displayID))
+			self:PrintChat(format("Morphed to model |cff71D5FF%d|r", displayID))
 		end
 	end
 end

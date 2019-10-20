@@ -3,6 +3,7 @@ local CM = ClickMorph
 local addons = {
 	"MogIt",
 	"TakusMorphCatalog",
+	"rIngameModelViewer",
 	"AtlasLootClassic",
 }
 
@@ -10,7 +11,7 @@ function OnEvent(self, event, isInitialLogin, isReloadingUi)
 	if isInitialLogin or isReloadingUi then
 		for _, addon in pairs(addons) do
 			if IsAddOnLoaded(addon) then
-				CM["Hook"..addon](CM)
+				CM[addon](CM)
 			end
 		end
 	end
@@ -20,7 +21,7 @@ local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:SetScript("OnEvent", OnEvent)
 
-function CM:HookMogIt()
+function CM:MogIt()
 	hooksecurefunc(MogIt, "UpdateGUI", function(frame, resize)
 		if not resize then -- models have been initialized
 			for _, model in pairs(MogIt.models) do
@@ -69,14 +70,34 @@ function CM.MorphMogItPreview(frame)
 	end
 end
 
-function CM:HookTakusMorphCatalog()
+local hookedTmc
+
+function CM:TakusMorphCatalog()
 	for _, child in pairs({UIParent:GetChildren()}) do
 		if child.Collection and child.ModelPreview then -- found TMCFrame
+			-- models
+			hooksecurefunc(child.Gallery, "Load", function()
+				if not hookedTmc then
+					for idx, button in pairs({child.Gallery:GetChildren()}) do
+						local oldOnClick = button:GetScript("OnClick")
+						button:SetScript("OnClick", function(frame, btn)
+							if IsAltKeyDown() then
+								CM:MorphModel("player", frame.ModelFrame.DisplayInfo)
+								child:Hide() -- hide the window when clickmorphing
+							else
+								oldOnClick(frame, btn)
+							end
+						end)
+					end
+					hookedTmc = true
+				end
+			end)
+			-- preview
 			local oldOnClick = child.ModelPreview:GetScript("OnMouseDown")
 			child.ModelPreview:SetScript("OnMouseDown", function(frame, button)
-				-- dont click the frame away if morphing
 				if IsAltKeyDown() then
 					self:MorphModel("player", frame.ModelFrame.DisplayInfo)
+					child:Hide()
 				else
 					oldOnClick(frame, button)
 				end
@@ -86,10 +107,65 @@ function CM:HookTakusMorphCatalog()
 	end
 end
 
+local hookedRimv
+local modelHooks = {}
+
+local function UpdateRimvHooks(frame)
+	for idx, model in pairs(frame.M) do
+		if not modelHooks[idx] then
+			local oldOnClick = model:GetScript("OnMouseDown")
+			model:SetScript("OnMouseDown", function(frame, button)
+				-- dont click the frame away if morphing
+				if IsAltKeyDown() then
+					CM:MorphModel("player", model.displayIndex)
+					frame:GetParent():Disable()
+				else
+					oldOnClick(frame, button)
+				end
+			end)
+			modelHooks[idx] = true
+		end
+	end
+end
+
+function CM:rIngameModelViewer()
+	if self.isClassic then -- missing model in classic
+		rIngameModelViewerMurlocButton:SetDisplayInfo(31)
+	end
+	rIngameModelViewerMurlocButton:HookScript("OnMouseDown", function()
+		if not hookedRimv then
+			for _, child in pairs({UIParent:GetChildren()}) do
+				if child.isCanvas and child.canvasPage then -- found canvas frame
+					-- models
+					UpdateRimvHooks(child) -- initial hooks
+					hooksecurefunc(child, "UpdateAllModels", UpdateRimvHooks)
+					-- overlay
+					hooksecurefunc(child, "CreateOverlay", function()
+						-- not directly accessible on posthook
+						C_Timer.After(.1, function()
+							local oldOnClick = child.overlay.model:GetScript("OnMouseDown")
+							child.overlay.model:SetScript("OnMouseDown", function(frame, button)
+								if IsAltKeyDown() then
+									CM:MorphModel("player", frame.displayIndex)
+									child:Disable()
+								else
+									oldOnClick(frame, button)
+								end
+							end)
+						end)
+					end)
+					break
+				end
+			end
+			hookedRimv = true
+		end
+	end)
+end
+
 local shownAtlasLootMessage
 local SEC_BUTTON_COUNT = 0
 
-function CM:HookAtlasLootClassic()
+function CM:AtlasLootClassic()
 	_G["AtlasLoot_GUI-Frame"]:HookScript("OnShow", function()
 		if not shownAtlasLootMessage then
 			self:PrintChat("For AtlasLoot you need to press |cff71D5FFAlt+Shift|r while clicking")
