@@ -5,7 +5,6 @@ move-folders:
 
 externals:
   Libs/LibStub: https://repos.wowace.com/wow/libstub/trunk
-  Libs/AuctionFaster: https://github.com/kaminaris/StdUi.git
 
 ignore:
     - README.md
