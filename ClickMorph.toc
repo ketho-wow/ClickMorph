@@ -9,7 +9,11 @@
 ## Notes: Lets you alt-click to morph
 ## Author: Ketho, Icesythe7
 
+Libs\LibStub\LibStub.lua
+Libs\StdUi\StdUi.xml
+
 ClickMorph.lua
+Gui.lua
 Mount.lua
 Wardrobe.lua
 Inspect.lua

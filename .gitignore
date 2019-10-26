@@ -1,3 +1,5 @@
 .release
 .luacheckrc
 .vscode
+# ignore hard-embeded libstub in working copy
+Libs/Libstub

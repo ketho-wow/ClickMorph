@@ -70,6 +70,8 @@ local AltenateWeaponSlot = {
 	[INVSLOT_OFFHAND] = INVSLOT_MAINHAND,
 }
 
+local genders = {MALE, FEMALE}
+
 function CM:PrintChat(msg, r, g, b)
 	DEFAULT_CHAT_FRAME:AddMessage(format("|cff7fff00ClickMorph|r: |r%s", msg), r, g, b)
 end
@@ -141,6 +143,9 @@ CM.morphers = {
 			else
 				SetItemSet(itemSetID)
 			end
+		end,
+		scale = function(_, value)
+			SetScale(value)
 		end,
 		--SetEnchant(slotId, enchantId)
 		--SetTitle(titleId)
@@ -224,9 +229,16 @@ CM.morphers = {
 }
 
 function CM:ResetMorph()
-	local morph = self:CanMorph()
-	if morph and morph.reset then
-		morph.reset()
+	local morph = self:CanMorph(true)
+	if morph then
+		if morph.reset then
+			morph.reset()
+		end
+		--[[ resetting the scale slider already sets the value to 1
+		if morph.scale then -- imorph doesnt reset scale
+			morph.scale("player", 1)
+		end
+		]]
 	end
 end
 
@@ -376,5 +388,19 @@ function CM:MorphItemSet(itemSetID)
 		if morph.itemset then
 			morph.itemset(itemSetID)
 		end
+	end
+end
+
+function CM:MorphRace(unit, race, sex)
+	local morph = self:CanMorph(true)
+	if morph and morph.race then
+		morph.race(unit, race, sex)
+	end
+end
+
+function CM:MorphScale(unit, value)
+	local morph = self:CanMorph(true)
+	if morph and morph.scale then
+		morph.scale(unit, value)
 	end
 end
