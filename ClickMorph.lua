@@ -99,7 +99,11 @@ function CM:CanMorph(override)
 				return morpher
 			end
 		end
-		self:PrintChat("Could not find any morpher!", 1, 1, 0)
+		if CM.isClassic then
+			self:PrintChat("Could not find iMorph. You need to make sure it's loaded before you use ClickMorph.", 1, 1, 0)
+		else
+			self:PrintChat("Could not find any morpher!", 1, 1, 0)
+		end
 	end
 end
 
@@ -328,9 +332,9 @@ function CM:MorphModel(unit, displayID, npcID, npcName, override)
 	if morph and morph.model then
 		morph.model(unit, displayID)
 		if npcID and npcName then
-			self:PrintChat(format("Morphed to NPC |cffFFFF00%d|r, model |cff71D5FF%d|r, %s", npcID, displayID, npcName))
+			self:PrintChat(format("NPC |cffFFFF00%d|r, model |cff71D5FF%d|r, %s", npcID, displayID, npcName))
 		else
-			self:PrintChat(format("Morphed to model |cff71D5FF%d|r", displayID))
+			self:PrintChat(format("Model |cff71D5FF%d|r", displayID))
 		end
 	end
 end
