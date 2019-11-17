@@ -84,7 +84,7 @@ function CM:LoadFileData(addon, frame)
 			LoadAddOn(addon)
 		else
 			frame:SetScript("OnUpdate", nil) -- cancel wardrobe timer
-			self:PrintChat("The ClickMorphData folder could not be found!", 1, 1, 0)
+			self:PrintChat("The ClickMorphData folder could not be found. Make sure you downloaded the release zip from https://github.com/ketho-wow/ClickMorph/releases", 1, 1, 0)
 			error(addon..": "..reason)
 		end
 	end
@@ -100,7 +100,7 @@ function CM:CanMorph(override)
 			end
 		end
 		if CM.isClassic then
-			self:PrintChat("Could not find iMorph. You need to make sure it's loaded before you use ClickMorph.", 1, 1, 0)
+			self:PrintChat("Could not find iMorph. Make sure iMorph is loaded before you use ClickMorph.", 1, 1, 0)
 		else
 			self:PrintChat("Could not find any morpher!", 1, 1, 0)
 		end
