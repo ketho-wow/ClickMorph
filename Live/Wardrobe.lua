@@ -137,7 +137,8 @@ end
 function f:UnlockWardrobe()
 	if not unlocked then
 		-- Load On Demand data from DBCs
-		CM.ItemAppearance, CM.ItemVisuals = CM:LoadFileData("ClickMorphData", self)
+		local fd = CM:GetFileData(self).Live
+		CM.ItemAppearance, CM.ItemVisuals = fd.ItemAppearance, fd.ItemVisuals
 		self:InitializeData()
 		self:HookWardrobe()
 		self:UpdateWardrobe() -- initial update

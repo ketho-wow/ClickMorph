@@ -11,6 +11,10 @@
 ## LoadOnDemand: 1
 ## SavedVariables: ClickMorphDataDB
 
-ItemAppearance.lua
-ItemVisuals.lua
-NpcDisplayIdsClassic.lua
+ClickMorphData.lua
+
+Live\ItemAppearance.lua
+Live\ItemVisuals.lua
+
+Classic\NpcDisplayID.lua
+Classic\MountID.lua

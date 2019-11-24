@@ -1,5 +1,6 @@
 -- 1.13.2 (31882)
-local NpcDisplayIdsClassic = {
+-- parsed from creaturecache.wdb
+ClickMorphData.Classic.NpcDisplayID = {
 	[3] = {987, "Flesh Eater"},
 	[6] = {10913, "Kobold Vermin"},
 	[19] = {6074, "Benny Questgiver"},
@@ -10380,7 +10381,3 @@ local NpcDisplayIdsClassic = {
 	[18153] = {5233, "Spirit Healer (DND)"},
 	[18199] = {11686, "Silithus Dust Turnin Quest Doodad Horde"},
 }
-
-function ClickMorphData:GetNpcDisplayIdsClassic()
-	return NpcDisplayIdsClassic
-end

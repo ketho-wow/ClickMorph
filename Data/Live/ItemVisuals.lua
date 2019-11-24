@@ -1,7 +1,7 @@
 
 -- https://wow.tools/dbc/?dbc=itemvisuals.db2
 -- 8.1.5 (29281)
-local ItemVisuals = {
+ClickMorphData.Live.ItemVisuals = {
 	[1] = "deathknight_frozenruneweapon_state",
 	[2] = "blueglow_med",
 	[24] = "blueglow_high",
@@ -196,7 +196,3 @@ local ItemVisuals = {
 	[453] = "8fx_islands_carryingazerite_large_statechest",
 	[454] = "7fx_weaponenchant_energyshadow",
 }
-
-function ClickMorphData:GetItemVisuals()
-	return ItemVisuals
-end

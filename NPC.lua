@@ -10,7 +10,8 @@ local CreatureTypes = {
 
 function CM:GetDisplayIDs()
 	if not NpcDisplayIDs then
-		NpcDisplayIDs = select(3, CM:LoadFileData("ClickMorphData"))
+		local FileData = self:GetFileData()
+		NpcDisplayIDs = FileData[CM.project].NpcDisplayID or {}
 		NpcDisplayNames = {}
 		for id, tbl in pairs(NpcDisplayIDs) do
 			NpcDisplayNames[tbl[2]:lower()] = {id, tbl[1], tbl[2]}

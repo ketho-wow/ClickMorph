@@ -14,8 +14,9 @@ Libs\StdUi\StdUi.xml
 
 ClickMorph.lua
 Gui.lua
-Mount.lua
-Wardrobe.lua
+Live\Mount.lua
+Live\Wardrobe.lua
+Classic\Mount.lua
 Inspect.lua
 NPC.lua
 Compat.lua

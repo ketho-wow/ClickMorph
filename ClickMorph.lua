@@ -1,6 +1,8 @@
 ClickMorph = {}
 local CM = ClickMorph
 CM.isClassic = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
+CM.project = CM.isClassic and "Classic" or "Live"
+local FileData
 
 -- inventory type -> equipment slot -> slot name
 local SlotNames = {
@@ -76,20 +78,24 @@ function CM:PrintChat(msg, r, g, b)
 	DEFAULT_CHAT_FRAME:AddMessage(format("|cff7fff00ClickMorph|r: |r%s", msg), r, g, b)
 end
 
-function CM:LoadFileData(addon, frame)
-	local loaded, reason = LoadAddOn(addon)
-	if not loaded then
-		if reason == "DISABLED" then
-			EnableAddOn(addon, true)
-			LoadAddOn(addon)
-		else
-			frame:SetScript("OnUpdate", nil) -- cancel wardrobe timer
-			self:PrintChat("The ClickMorphData folder could not be found. Make sure you downloaded the release zip from https://github.com/ketho-wow/ClickMorph/releases", 1, 1, 0)
-			error(addon..": "..reason)
+function CM:GetFileData(frame)
+	if not FileData then
+		local addon = "ClickMorphData"
+		local loaded, reason = LoadAddOn(addon)
+		if not loaded then
+			if reason == "DISABLED" then
+				EnableAddOn(addon, true)
+				LoadAddOn(addon)
+			else
+				frame:SetScript("OnUpdate", nil) -- cancel any wardrobe timer
+				self:PrintChat("The ClickMorphData folder could not be found."
+					.."Make sure you downloaded the release zip from https://github.com/ketho-wow/ClickMorph/releases", 1, 1, 0)
+				error(addon..": "..reason)
+			end
 		end
+		FileData = _G[addon]
 	end
-	local fd = _G[addon]
-	return fd:GetItemAppearance(), fd:GetItemVisuals(), fd:GetNpcDisplayIdsClassic()
+	return FileData
 end
 
 function CM:CanMorph(override)
@@ -99,11 +105,8 @@ function CM:CanMorph(override)
 				return morpher
 			end
 		end
-		if CM.isClassic then
-			self:PrintChat("Could not find iMorph. Make sure iMorph is loaded before you use ClickMorph.", 1, 1, 0)
-		else
-			self:PrintChat("Could not find any morpher!", 1, 1, 0)
-		end
+		local name = CM.isClassic and "iMorph" or "jMorph"
+		self:PrintChat("Could not find |cffFFFF00"..name.."|r. Make sure it is loaded before you use ClickMorph.", 1, 1, 0)
 	end
 end
 
@@ -132,7 +135,7 @@ CM.morphers = {
 		race = function(_, raceID, genderID)
 			SetRace(raceID, genderID)
 		end,
-		mount = function(displayID)
+		mount = function(_, displayID)
 			if CM:CanMorphMount() then
 				SetMount(displayID)
 				return true
@@ -179,9 +182,9 @@ CM.morphers = {
 			SetAlternateRace(unit, raceID)
 			UpdateModel(unit)
 		end,
-		mount = function(displayID)
+		mount = function(unit, displayID)
 			if CM:CanMorphMount() then
-				SetMountDisplayID("player", displayID)
+				SetMountDisplayID(unit, displayID)
 				MorphPlayerMount()
 				return true
 			end
@@ -193,6 +196,9 @@ CM.morphers = {
 		enchant = function(unit, slotID, visualID)
 			SetVisibleEnchant(unit, slotID, visualID)
 			UpdateModel(unit)
+		end,
+		scale = function(unit, value)
+			SetScale(unit, value)
 		end,
 		-- spell (nyi)
 		-- title
@@ -214,7 +220,7 @@ CM.morphers = {
 			lm("model", displayID)
 			lm("morph")
 		end,
-		mount = function(displayID)
+		mount = function(_, displayID)
 			lm("mount", displayID)
 			lm("morph")
 			return true
@@ -256,8 +262,17 @@ function CM:MorphMount(unit, mountID)
 			local multipleIDs = C_MountJournal.GetMountAllCreatureDisplayInfoByID(mountID)
 			displayID = multipleIDs[random(#multipleIDs)].creatureDisplayID
 		end
-		if morph.mount(displayID) then
-			CM:PrintChat(format("Morphed mount to |cff71D5FF%d|r %s", displayID, GetSpellLink(spellID)))
+		if morph.mount(unit, displayID) then
+			CM:PrintChat(format("Morphed mount to |cffFFFF00%d|r %s", displayID, GetSpellLink(spellID)))
+		end
+	end
+end
+
+function CM:MorphMountClassic(unit, displayID, spellID, override)
+	local morph = self:CanMorph(override)
+	if morph and morph.mount then
+		if morph.mount(unit, displayID) then
+			CM:PrintChat(format("Morphed mount to |cffFFFF00%d|r %s", displayID, GetSpellLink(spellID)))
 		end
 	end
 end

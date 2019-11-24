@@ -105,6 +105,7 @@ function f:UnlockMounts()
 	end
 	MountJournal.searchBox:HookScript("OnHide", ClearSearch)
 	MountJournal.searchBox.clearButton:HookScript("OnClick", ClearSearch)
+	MountJournal_FullUpdate(MountJournal)
 end
 
 function f.UpdateMountCount()

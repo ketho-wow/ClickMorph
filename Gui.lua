@@ -2,9 +2,11 @@ local CM = ClickMorph
 local StdUi = LibStub("StdUi")
 local version = format("|cff71D5FF%s|r", GetAddOnMetadata("ClickMorph", "Version"))
 local gui
+local FileData
 
 function CM:CreateGUI()
-	gui = StdUi:Window(UIParent, 350, 250, "ClickMorph "..version)
+	FileData = self:GetFileData()
+	gui = StdUi:Window(UIParent, 350, 300, "ClickMorph "..version)
 	gui:SetPoint("CENTER", 320, 0)
 	gui:Hide() -- visible by default
 
@@ -22,7 +24,7 @@ function CM:CreateGUI()
 
 	local race_dd = StdUi:Dropdown(gui, 100, 20, races, select(3, UnitRace("player")))
 	race_dd:SetPoint("TOPLEFT", 20, -60)
-
+	
 	local genders = {
 		{value = 1, text = MALE},
 		{value = 2, text = FEMALE},
@@ -32,11 +34,11 @@ function CM:CreateGUI()
 	StdUi:GlueRight(sex_dd, race_dd, 10, 0)
 
 	race_dd.OnValueChanged = function(widget, raceId)
-		CM:MorphRace("player", raceId, sex_dd.value)
+		self:MorphRace("player", raceId, sex_dd.value)
 	end
 
 	sex_dd.OnValueChanged = function(widget, sexId)
-		CM:MorphRace("player", race_dd.value, sexId)
+		self:MorphRace("player", race_dd.value, sexId)
 	end
 
 	-- model
@@ -47,7 +49,7 @@ function CM:CreateGUI()
 	StdUi:GlueTop(model_fs, model_eb, 0, 15)
 
 	model_eb.OnValueChanged = function(widget, displayID)
-		CM:MorphModel("player", displayID, nil, nil, true)
+		self:MorphModel("player", displayID, nil, nil, true)
 	end
 
 	local or_fs = StdUi:Label(gui, "OR")
@@ -55,8 +57,8 @@ function CM:CreateGUI()
 
 	-- npc
 	local npcNames = {}
-	local npcIds = self:GetDisplayIDs()
-	for id, tbl in pairs(npcIds) do
+	local npcIDs = self:GetDisplayIDs()
+	for id, tbl in pairs(npcIDs) do
 		tinsert(npcNames, {
 			value = id,
 			text = tbl[2],
@@ -69,23 +71,45 @@ function CM:CreateGUI()
 	local npc_fs = StdUi:FontString(gui, ".npc")
 	StdUi:GlueTop(npc_fs, npc_eb, 0, 15)
 
-	npc_eb.OnValueChanged = function(widget, npcId, name)
-		npcId = npcId or tonumber(name)
-		if npcId then
-			local npcInfo = npcIds[npcId]
+	npc_eb.OnValueChanged = function(widget, npcID, name)
+		npcID = npcID or tonumber(name)
+		if npcID then
+			local npcInfo = npcIDs[npcID]
 			if npcInfo then
-				CM:MorphNpcByID(npcId)
-				local displayId = npcInfo[1]
-				model_eb:SetText(displayId)
+				self:MorphNpcByID(npcID)
+				local displayID = npcInfo[1]
+				model_eb:SetText(displayID)
 				return
 			end
 		end
-		CM:PrintChat("Could not find NPC "..name)
+		self:PrintChat("Could not find NPC "..name)
+	end
+
+	-- mount
+	local mountNames = self.isClassic and self:GetClassicMountIDs() or {}
+	local mount_eb = StdUi:Autocomplete(gui, 170, 20, nil, nil, nil, mountNames)
+	StdUi:GlueBelow(mount_eb, model_eb, 0, -30, "LEFT")
+
+	local mount_fs = StdUi:FontString(gui, ".mount")
+	StdUi:GlueTop(mount_fs, mount_eb, 0, 15)
+
+	mount_eb.OnValueChanged = function(widget, id, name)
+		id = id or tonumber(name)
+		local mountIDs = FileData[self.project].MountID[id]
+		if mountIDs then
+			self:MorphMountClassic("player", id, mountIDs.spell, true)
+			return
+		end
+		self:PrintChat("Could not find mount "..name)
 	end
 
 	-- scale
 	local scale_slider = StdUi:Slider(gui, 150, 20, 1, false, .5, 3)
-	StdUi:GlueBelow(scale_slider, model_eb, 0, -30, "LEFT")
+	StdUi:GlueBelow(scale_slider, mount_eb, 0, -30, "LEFT")
+	-- default slider is hard to see
+	-- dont want to change color for all buttons instead of just slider thumb
+	scale_slider:SetBackdropColor(.2, .2, .2)
+	scale_slider.thumb:SetBackdropColor(.8, .8, .8)
 
 	local scale_text = ".scale |cffFFFFFF%.1f|r"
 	local scale_fs = StdUi:FontString(gui, scale_text:format(1))
@@ -93,7 +117,7 @@ function CM:CreateGUI()
 
 	scale_slider.OnValueChanged = function(widget, value)
 		scale_fs:SetText(scale_text:format(value))
-		CM:MorphScale("player", value)
+		self:MorphScale("player", value)
 	end
 
 	-- reset
@@ -101,11 +125,12 @@ function CM:CreateGUI()
 	StdUi:GlueBottom(reset_btn, gui, -10, 10, "RIGHT")
 
 	reset_btn:SetScript("OnClick", function()
-		-- todo: reset race/sex dropdowns
+		race_dd:SetText(races[select(3, UnitRace("player"))].text)
+		sex_dd:SetText(genders[UnitSex("player")-1].text)
 		model_eb:SetText(0)
 		npc_eb:SetText("")
 		scale_slider:SetValue(1)
-		CM:ResetMorph()
+		self:ResetMorph()
 	end)
 end
 
