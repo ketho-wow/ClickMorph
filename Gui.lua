@@ -87,7 +87,7 @@ function CM:CreateGUI()
 
 	-- mount
 	local mountNames = self.isClassic and self:GetClassicMountIDs() or {}
-	local mount_eb = StdUi:Autocomplete(gui, 170, 20, nil, nil, nil, mountNames)
+	local mount_eb = StdUi:Autocomplete(gui, 210, 20, nil, nil, nil, mountNames)
 	StdUi:GlueBelow(mount_eb, model_eb, 0, -30, "LEFT")
 
 	local mount_fs = StdUi:FontString(gui, ".mount")
@@ -104,7 +104,7 @@ function CM:CreateGUI()
 	end
 
 	-- scale
-	local scale_slider = StdUi:Slider(gui, 150, 20, 1, false, .5, 3)
+	local scale_slider = StdUi:Slider(gui, 210, 20, 1, false, .5, 3)
 	StdUi:GlueBelow(scale_slider, mount_eb, 0, -30, "LEFT")
 	-- default slider is hard to see
 	-- dont want to change color for all buttons instead of just slider thumb
