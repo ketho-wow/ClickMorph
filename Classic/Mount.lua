@@ -12,6 +12,9 @@ function CM:GetClassicMountIDs()
 				text = tbl.name,
 			})
 		end
+		sort(MountIDs, function(a, b)
+			return a.text < b.text
+		end)
 	end
 	return MountIDs
 end
