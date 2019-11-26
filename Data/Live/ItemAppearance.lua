@@ -1,6 +1,5 @@
 
--- see https://github.com/Ketho/WardrobeSort/wiki/Data-workflow
--- not a complete list as there are loads of missing file names in 8.2.0
+-- https://github.com/Ketho/WoWtoolsParser/blob/master/examples/ItemAppearance.lua
 ClickMorphData.Live.ItemAppearance = {
 [153]="plate_a_01silver_chest",
 [154]="sword_1h_short_a_02rusty",
