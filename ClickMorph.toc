@@ -8,11 +8,13 @@
 ## Title: ClickMorph
 ## Notes: Lets you alt-click to morph
 ## Author: Ketho, Icesythe7
+## SavedVariables: ClickMorphDB
 
 Libs\LibStub\LibStub.lua
 Libs\StdUi\StdUi.xml
 
 ClickMorph.lua
+Database.lua
 
 iMorph\iMorph.lua
 
