@@ -4,6 +4,11 @@ CM.isClassic = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
 CM.project = CM.isClassic and "Classic" or "Live"
 local FileData
 
+ClickMorph.override = false
+if ClickMorph.override then -- temporarily dummy table
+	IMorphInfo = IMorphInfo or {}
+end
+
 -- inventory type -> equipment slot -> slot name
 local SlotNames = {
 	[INVSLOT_HEAD] = "head", -- 1

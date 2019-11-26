@@ -13,10 +13,15 @@ Libs\LibStub\LibStub.lua
 Libs\StdUi\StdUi.xml
 
 ClickMorph.lua
+
+iMorph\iMorph.lua
+
 Gui.lua
+NPC.lua
+Inspect.lua
+Compat.lua
+
 Live\Mount.lua
 Live\Wardrobe.lua
+
 Classic\Mount.lua
-Inspect.lua
-NPC.lua
-Compat.lua
