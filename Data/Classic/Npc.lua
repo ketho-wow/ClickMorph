@@ -1,5 +1,5 @@
--- 1.13.2 (31882)
 -- parsed from creaturecache.wdb
+-- 1.13.2 (31882)
 ClickMorphData.Classic.Npc = {
 	[3] = {987, "Flesh Eater"},
 	[6] = {10913, "Kobold Vermin"},

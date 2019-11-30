@@ -5,7 +5,7 @@ CM.project = CM.isClassic and "Classic" or "Live"
 local FileData
 
 -- inventory type -> equipment slot -> slot name
-local SlotNames = {
+CM.SlotNames = {
 	[INVSLOT_HEAD] = "head", -- 1
 	[INVSLOT_SHOULDER] = "shoulder", -- 3
 	[INVSLOT_BODY] = "shirt", -- 4
@@ -220,13 +220,13 @@ CM.morphers = {
 			return true
 		end,
 		item = function(_, slotID, itemID, itemModID)
-			lm(SlotNames[slotID], itemID, itemModID)
+			lm(CM.SlotNames[slotID], itemID, itemModID)
 		end,
 		update = function()
 			lm("morph")
 		end,
 		enchant = function(_, slotID, visualID)
-			lm(SlotNames[slotID], nil, nil, visualID)
+			lm(CM.SlotNames[slotID], nil, nil, visualID)
 			lm("morph")
 		end,
 	},
@@ -309,7 +309,7 @@ function CM.MorphItem(item)
 				lastWeaponSlot = slotID
 			end
 			morph.item("player", slotID, itemID)
-			CM:PrintChat(format("Morphed |cffFFFF00%s|r to item |cff71D5FF%d:%d|r %s", SlotNames[slotID], itemID, 0, itemLink))
+			CM:PrintChat(format("Morphed |cffFFFF00%s|r to item |cff71D5FF%d:%d|r %s", CM.SlotNames[slotID], itemID, 0, itemLink))
 		end
 	end
 end
@@ -324,7 +324,7 @@ function CM:MorphItemBySource(unit, source)
 		local itemText = itemLink:find("%[%]") and CM.ItemAppearance and CM.ItemAppearance[source.visualID] or itemLink
 		morph.item(unit, slotID, source.itemID, source.itemModID)
 		morph.update(unit)
-		self:PrintChat(format("Morphed |cffFFFF00%s|r to item |cff71D5FF%d:%d|r %s", SlotNames[slotID], source.itemID, source.itemModID, itemText))
+		self:PrintChat(format("Morphed |cffFFFF00%s|r to item |cff71D5FF%d:%d|r %s", CM.SlotNames[slotID], source.itemID, source.itemModID, itemText))
 	end
 end
 
@@ -332,7 +332,7 @@ function CM:MorphEnchant(unit, slotID, visualID, enchantName)
 	local morph = self:CanMorph()
 	if morph and morph.enchant then
 		morph.enchant(unit, slotID, visualID)
-		self:PrintChat(format("Morphed |cffFFFF00%s|r to enchant |cff71D5FF%d|r %s", SlotNames[slotID], visualID, enchantName))
+		self:PrintChat(format("Morphed |cffFFFF00%s|r to enchant |cff71D5FF%d|r %s", CM.SlotNames[slotID], visualID, enchantName))
 	end
 end
 
@@ -358,7 +358,7 @@ function CM.MorphTransmogSet()
 		for _, v in pairs(WardrobeSetsDataProviderMixin:GetSortedSetSources(setID)) do
 			local source = C_TransmogCollection.GetSourceInfo(v.sourceID)
 			local slotID = C_Transmog.GetSlotForInventoryType(v.invType)
-			morph.item("player", SlotNames[slotID], source.itemID, source.itemModID)
+			morph.item("player", CM.SlotNames[slotID], source.itemID, source.itemModID)
 		end
 		morph.update("player")
 		CM:PrintChat(format("Morphed to set |cff71D5FF%d: %s|r (%s)", setID, setInfo.name, setInfo.description or ""))

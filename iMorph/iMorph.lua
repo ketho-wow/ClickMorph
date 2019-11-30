@@ -56,6 +56,9 @@ local commands = {
 	end,
 	reset = function()
 		SetRace(select(3, UnitRace("player")), UnitSex("player")-1)
+		for slot in pairs(CM.SlotNames) do
+			SetItem(slot, GetInventoryItemID("player", slot) or 0)
+		end
 		SetScale(1)
 		wipe(state)
 	end,
