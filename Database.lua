@@ -1,8 +1,10 @@
 local CM = ClickMorph
+CM.db_callbacks = {}
 local db
 
 local defaults = {
-	db_version = 1,
+	db_version = 4,
+	state = {},
 }
 
 local f = CreateFrame("Frame")
@@ -13,6 +15,9 @@ function f:OnEvent(event, addon)
 			ClickMorphDB = CopyTable(defaults)
 		end
 		db = ClickMorphDB
+		for _, func in pairs(CM.db_callbacks) do
+			func()
+		end
 		self:UnregisterEvent(event)
 	end
 end

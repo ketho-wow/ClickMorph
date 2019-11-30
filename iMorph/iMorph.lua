@@ -1,18 +1,40 @@
 local CM = ClickMorph
+local db
+local morph
 
-CM.override = true
+local SEX_MALE = 1
+local SEX_FEMALE = 2
+
+local FLAG_SMARTMORPH = 2
+
+CM.override = false
 if CM.override then -- temporary dummy table
-	IMorphInfo = IMorphInfo or {}
+	IMorphInfo = IMorphInfo or {
+		items = {},
+		enchants = {},
+		styles = {},
+		forms = {}
+	}
 else
 	return
 end
+
+tinsert(CM.db_callbacks, function()
+	db = ClickMorphDB
+	state = db.state
+end)
+
+local EnchantSlots = {
+	[1] = INVSLOT_MAINHAND,
+	[2] = INVSLOT_OFFHAND,
+}
 
 local help = {
 	"|cff7fff00iMorph|r commands:",
 	".reset",
 	".race |cffFFDAE9<1-9>|r, .gender",
-	".morph |cffFFDAE9<id>|r, .npc |cffFFDAE9<id/name>|r",
-	".morphpet |cffFFDAE9<id>|r",
+	".morph |cffFFDAE9<id>|r, .morphpet |cffFFDAE9<id>|r",
+	".npc |cffFFDAE9<id/name>|r",
 	".mount |cffFFDAE9<id>|r",
 	".item |cffFFDAE9<1-19> <id>|r, .itemset |cffFFDAE9<id>|r",
 	".enchant |cffFFDAE9<1-2> <id>|r",
@@ -25,12 +47,44 @@ local help = {
 	".disablesm, .enablesm",
 }
 
--- all commands take numbers except .npc
--- so we have to sanitize each command separately
+-- cast strings to numbers for each command since .npc also accepts strings
+-- on another note, imorph also tries to cast strings to integers
 local commands = {
 	help = function()
-		for _, v in pairs(help) do
-			print(v)
+		for _, line in pairs(help) do
+			print(line)
+		end
+	end,
+	reset = function()
+		SetRace(select(3, UnitRace("player")), UnitSex("player")-1)
+		SetScale(1)
+		wipe(state)
+	end,
+	-- todo: fix hostile races bug
+	--  own faction is hostile and "cant speak in that language"
+	race = function(raceID)
+		raceID = tonumber(raceID)
+		local sex = state.sex or UnitSex("player")-1
+		if raceID then
+			SetRace(raceID, sex)
+			state.race = raceID
+		end
+	end,
+	gender = function(sexID)
+		sexID = tonumber(sexID)
+		local race = state.race or select(3, UnitRace("player"))
+		if sexID then
+			SetRace(race, sexID)
+			state.sex = sexID
+		else -- toggle between genders
+			local sex = state.sex or UnitSex("player")-1
+			if sex == SEX_MALE then
+				SetRace(race, SEX_FEMALE)
+				state.sex = SEX_FEMALE
+			elseif sex == SEX_FEMALE then
+				SetRace(race, SEX_MALE)
+				state.sex = SEX_MALE
+			end
 		end
 	end,
 	morph = function(id)
@@ -39,8 +93,68 @@ local commands = {
 			Morph(id)
 		end
 	end,
+	morphpet = function(id)
+		id = tonumber(id)
+		if id then
+			MorphPet(id)
+		end
+	end,
+	npc = function(...)
+		local args = {...}
+		local id = tonumber(args[1])
+		if id then
+			MorphNpc(id)
+		elseif args[1] ~= "" then -- by name
+			local name = table.concat(args, " ")
+			MorphNpc(name)
+		end
+	end,
+	mount = function(id)
+		id = tonumber(id)
+		if id then
+			SetMount(id)
+		end
+	end,
+	item = function(slot, item)
+		slot, item = tonumber(slot), tonumber(item)
+		if slot and item then
+			SetItem(slot, item)
+		end
+	end,
+	itemset = function(id)
+		id = tonumber(id)
+		if id then
+			SetItem(id)
+		end
+	end,
+	enchant = function(weapon, enchant)
+		weapon, enchant = tonumber(weapon), tonumber(enchant)
+		if weapon and enchant then
+			SetEnchant(EnchantSlots[weapon], enchant)
+		end
+	end,
+	scale = function(id)
+		id = tonumber(id)
+		if id then
+			SetScale(id)
+		end
+	end,
+	scalepet = function(id)
+		id = tonumber(id)
+		if id then
+			SetScalePet(id)
+		end
+	end,
+	-- smart morphing
+	enablesm = function()
+		SetFlag(FLAG_SMARTMORPH, 1)
+	end,
+	disablesm = function()
+		SetFlag(FLAG_SMARTMORPH, 0)
+	end,
 }
 
+-- todo: run this as blizzard code to prevent tainting secure cmds
 local SendText = ChatEdit_SendText
 ChatEdit_SendText = function(editBox, addHistory)
 	local text = editBox:GetText()
