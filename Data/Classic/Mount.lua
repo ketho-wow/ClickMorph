@@ -1,5 +1,5 @@
 -- https://gist.github.com/Meorawr/afa01d870f57e13a9fa69e148ef23384
-ClickMorphData.Classic.MountID = {
+ClickMorphData.Classic.Mount = {
 	[207] = {spell = 578, item = 1041, name = "Black Wolf"},
 	[247] = {spell = 580, item = 1132, name = "Large Timber Wolf"},
 	--[1166] = {spell = 581, item = 1133, name = "Winter Wolf"},

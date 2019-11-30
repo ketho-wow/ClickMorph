@@ -1,13 +1,13 @@
 local CM = ClickMorph
 local db
-local morph
+local state
 
 local SEX_MALE = 1
 local SEX_FEMALE = 2
 
 local FLAG_SMARTMORPH = 2
 
-CM.override = false
+CM.override = true
 if CM.override then -- temporary dummy table
 	IMorphInfo = IMorphInfo or {
 		items = {},
@@ -42,9 +42,8 @@ local help = {
 	".title |cffFFDAE9<0-19>|r, .medal |cffFFDAE9<0-8>|r",
 	".skin |cffFFDAE9<id>|r, .face |cffFFDAE9<id>|r, .features |cffFFDAE9<id>|r",
 	".hair |cffFFDAE9<id>|r, .haircolor |cffFFDAE9<id>|r",
-	".shapeshift |cffFFDAE9<form id> <display id>|r",
 	".weather |cffFFDAE9<id> <0.0-1.0>|r",
-	".disablesm, .enablesm",
+	".shapeshift |cffFFDAE9<form id> <display id>|r", ".disablesm, .enablesm",
 }
 
 -- cast strings to numbers for each command since .npc also accepts strings
@@ -101,13 +100,7 @@ local commands = {
 	end,
 	npc = function(...)
 		local args = {...}
-		local id = tonumber(args[1])
-		if id then
-			MorphNpc(id)
-		elseif args[1] ~= "" then -- by name
-			local name = table.concat(args, " ")
-			MorphNpc(name)
-		end
+		CM:MorphNpc(table.concat(args, " "))
 	end,
 	mount = function(id)
 		id = tonumber(id)
@@ -121,12 +114,14 @@ local commands = {
 			SetItem(slot, item)
 		end
 	end,
+--[[
 	itemset = function(id)
 		id = tonumber(id)
 		if id then
-			SetItem(id)
+			iMorphFrame:SetItemSet(id)
 		end
 	end,
+]]
 	enchant = function(weapon, enchant)
 		weapon, enchant = tonumber(weapon), tonumber(enchant)
 		if weapon and enchant then
@@ -145,7 +140,61 @@ local commands = {
 			SetScalePet(id)
 		end
 	end,
+	title = function(id)
+		id = tonumber(id)
+		if id then
+			SetTitle(id)
+		end
+	end,
+	medal = function(id)
+		id = tonumber(id)
+		if id then
+			SetMedal(id)
+		end
+	end,
+	skin = function(id)
+		id = tonumber(id)
+		if id then
+			SetSkinColor(id)
+		end
+	end,
+	face = function(id)
+		id = tonumber(id)
+		if id then
+			SetFace(id)
+		end
+	end,
+	hair = function(id)
+		id = tonumber(id)
+		if id then
+			SetHairStyle(id)
+		end
+	end,
+	haircolor = function(id)
+		id = tonumber(id)
+		if id then
+			SetHairColor(id)
+		end
+	end,
+	features = function(id)
+		id = tonumber(id)
+		if id then
+			SetFeatures(id)
+		end
+	end,
+	weather = function(id, intensity)
+		id, intensity = tonumber(id), tonumber(intensity)
+		if id and intensity then
+			SetWeather(id, intensity)
+		end
+	end,
 	-- smart morphing
+	shapeshift = function(form, displayID)
+		form, displayID = tonumber(form), tonumber(displayID)
+		if form and displayID then
+			SetShapeshiftForm(form, displayID)
+		end
+	end,
 	enablesm = function()
 		SetFlag(FLAG_SMARTMORPH, 1)
 	end,
@@ -154,7 +203,6 @@ local commands = {
 	end,
 }
 
--- todo: run this as blizzard code to prevent tainting secure cmds
 local SendText = ChatEdit_SendText
 ChatEdit_SendText = function(editBox, addHistory)
 	local text = editBox:GetText()

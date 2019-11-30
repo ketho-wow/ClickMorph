@@ -19,7 +19,7 @@ Database.lua
 iMorph\iMorph.lua
 
 Gui.lua
-NPC.lua
+Npc.lua
 Inspect.lua
 Compat.lua
 

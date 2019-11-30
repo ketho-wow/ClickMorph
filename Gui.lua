@@ -95,7 +95,7 @@ function CM:CreateGUI()
 
 	mount_eb.OnValueChanged = function(widget, id, name)
 		id = id or tonumber(name)
-		local mountIDs = FileData[self.project].MountID[id]
+		local mountIDs = FileData[self.project].Mount[id]
 		if mountIDs then
 			self:MorphMountClassic("player", id, mountIDs.spell, true)
 			return

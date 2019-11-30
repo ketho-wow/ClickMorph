@@ -16,5 +16,6 @@ ClickMorphData.lua
 Live\ItemAppearance.lua
 Live\ItemVisuals.lua
 
-Classic\NpcDisplayID.lua
-Classic\MountID.lua
+Classic\ItemSet.lua
+Classic\Mount.lua
+Classic\Npc.lua

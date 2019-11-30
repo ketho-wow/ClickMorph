@@ -11,7 +11,7 @@ local CreatureTypes = {
 function CM:GetDisplayIDs()
 	if not NpcDisplayIDs then
 		local FileData = self:GetFileData()
-		NpcDisplayIDs = FileData[CM.project].NpcDisplayID or {}
+		NpcDisplayIDs = FileData[CM.project].Npc or {}
 		NpcDisplayNames = {}
 		for id, tbl in pairs(NpcDisplayIDs) do
 			NpcDisplayNames[tbl[2]:lower()] = {id, tbl[1], tbl[2]}
@@ -31,12 +31,12 @@ function CM:MorphNpcByID(npcID)
 	end
 end
 
-local function MorphNpcByName(tbl)
+function CM:MorphNpcByName(tbl)
 	local npcID, displayID, name = unpack(tbl)
-	CM:MorphModel("player", displayID, npcID, name, true)
+	self:MorphModel("player", displayID, npcID, name, true)
 end
 
-local function MorphNpcByUnit(unit)
+function CM:MorphNpcByUnit(unit)
 	local guid = UnitGUID(unit)
 	if guid then
 		local ids = CM:GetDisplayIDs()
@@ -46,40 +46,44 @@ local function MorphNpcByUnit(unit)
 			local info = ids[npcID]
 			local targetDisplayID = info[1]
 			local name = info[2]
-			CM:MorphModel("player", targetDisplayID, npcID, name, true)
+			self:MorphModel("player", targetDisplayID, npcID, name, true)
 		end
+	end
+end
+
+function CM:MorphNpc(text)
+	local _, npcNames = self:GetDisplayIDs()
+	local userNpcId = tonumber(text)
+	-- morph directly by display ID
+	if userNpcId then
+		self:MorphNpcByID(userNpcId)
+	-- search through npc names
+	elseif #text > 0 then
+		local textLower = text:lower()
+		if npcNames[textLower] then -- lookup name
+			self:MorphNpcByName(npcNames[textLower])
+		else
+			for name, tbl in pairs(npcNames) do -- iterate through npcs
+				if name:find(textLower) then
+					self:MorphNpcByName(tbl)
+					return
+				end
+			end
+			self:PrintChat("Could not find NPC "..text)
+		end
+	else
+		self:MorphNpcByUnit("target")
 	end
 end
 
 SLASH_CLICKMORPH_NPC1 = "/npc"
 
 function SlashCmdList.CLICKMORPH_NPC(text)
-	local _, npcNames = CM:GetDisplayIDs()
-	local userNpcId = tonumber(text)
-	-- morph directly by display ID
-	if userNpcId then
-		CM:MorphNpcByID(userNpcId)
-	-- search through npc names
-	elseif #text > 0 then
-		local textLower = text:lower()
-		if npcNames[textLower] then
-			MorphNpcByName(npcNames[textLower])
-		else
-			for name, tbl in pairs(npcNames) do
-				if name:find(textLower) then
-					MorphNpcByName(tbl)
-					return
-				end
-			end
-			CM:PrintChat("Could not find NPC "..text)
-		end
-	else
-		MorphNpcByUnit("target")
-	end
+	CM:MorphNpc(text)
 end
 
 TargetFrame:HookScript("OnClick", function(frame)
 	if IsAltKeyDown() then
-		MorphNpcByUnit(frame.unit)
+		CM:MorphNpcByUnit(frame.unit)
 	end
 end)

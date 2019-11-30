@@ -1,6 +1,6 @@
 -- 1.13.2 (31882)
 -- parsed from creaturecache.wdb
-ClickMorphData.Classic.NpcDisplayID = {
+ClickMorphData.Classic.Npc = {
 	[3] = {987, "Flesh Eater"},
 	[6] = {10913, "Kobold Vermin"},
 	[19] = {6074, "Benny Questgiver"},
