@@ -1,7 +1,6 @@
 local CM = ClickMorph
 local db
 local state
-iMorphLua = CreateFrame("Frame")
 
 local SEX_MALE = 1
 local SEX_FEMALE = 2
@@ -20,6 +19,28 @@ if CM.override then -- temporary dummy table
 else
 	return
 end
+
+local iMorphLua = CreateFrame("Frame")
+_G.iMorphLua = iMorphLua
+
+function iMorphLua:OnEvent(event, ...)
+	C_Timer.After(0, function()	-- imorph api is not yet registered
+		if state.race or state.sex then
+			local race = state.race or select(3, UnitRace("player"))
+			local sex = state.sex or UnitSex("player")-1
+			SetRace(race, sex)
+		end
+		if state.morph then
+			Morph(state.morph)
+		end
+		if state.scale then
+			SetScale(state.scale)
+		end
+	end)
+end
+
+iMorphLua:RegisterEvent("PLAYER_ENTERING_WORLD")
+iMorphLua:SetScript("OnEvent", iMorphLua.OnEvent)
 
 tinsert(CM.db_callbacks, function()
 	db = ClickMorphDB
@@ -76,6 +97,7 @@ local commands = {
 		if raceID then
 			SetRace(raceID, sex)
 			state.race = raceID
+			state.morph = nil
 		end
 	end,
 	gender = function(sexID)
@@ -94,11 +116,14 @@ local commands = {
 				state.sex = SEX_MALE
 			end
 		end
+		state.morph = nil
 	end,
 	morph = function(id)
 		id = tonumber(id)
 		if id then
 			Morph(id)
+			state.morph = id
+			state.race, state.sex = nil, nil
 		end
 	end,
 	morphpet = function(id)
@@ -139,6 +164,7 @@ local commands = {
 		id = tonumber(id)
 		if id then
 			SetScale(id)
+			state.scale = id
 		end
 	end,
 	scalepet = function(id)
