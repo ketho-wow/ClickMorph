@@ -1,6 +1,7 @@
 local CM = ClickMorph
 local db
 local state
+iMorphLua = CreateFrame("Frame")
 
 local SEX_MALE = 1
 local SEX_FEMALE = 2
@@ -9,6 +10,7 @@ local FLAG_SMARTMORPH = 2
 
 CM.override = true
 if CM.override then -- temporary dummy table
+	print("ClickMorph: overriding iMorph")
 	IMorphInfo = IMorphInfo or {
 		items = {},
 		enchants = {},
@@ -29,7 +31,7 @@ local EnchantSlots = {
 	[2] = INVSLOT_OFFHAND,
 }
 
-function CM:iMorphReset()
+function iMorphLua:iMorphReset()
 	SetRace(select(3, UnitRace("player")), UnitSex("player")-1)
 	for slot in pairs(CM.SlotNames) do
 		SetItem(slot, GetInventoryItemID("player", slot) or 0)
@@ -64,7 +66,7 @@ local commands = {
 		end
 	end,
 	reset = function()
-		CM:iMorphReset()
+		iMorphLua:iMorphReset()
 	end,
 	-- todo: fix hostile races bug
 	--  own faction is hostile and "cant speak in that language"

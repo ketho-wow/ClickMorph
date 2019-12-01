@@ -1,6 +1,6 @@
 local CM = ClickMorph
+local db 
 CM.db_callbacks = {}
-local db
 
 local defaults = {
 	db_version = 4,
