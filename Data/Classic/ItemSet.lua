@@ -1425,8 +1425,9 @@ ClickMorphData.Classic.ItemSet = {
 -- tier 3 belts are glitched and probably wont be fixed until phase 6
 local t3belt = {
 	[22422] = true, -- 523 Warrior: Dreadnaught Waistguard
-	[22431] = true, -- 528 Paladin: Redemption Girdle
+	[22431] = true, -- 528 Paladin: Redemption Girdle (Alliance)
 	[22442] = true, -- 530 Hunter: Cryptstalker Girdle
+	[22470] = true, -- 527 Paladin: Earthshatter Girdle (Horde)
 	[22482] = true, -- 524 Rogue: Bonescythe Waistguard
 	[22494] = true, -- 521 Druid: Dreamwalker Girdle
 	[22502] = true, -- 526 Mage: Frostfire Belt

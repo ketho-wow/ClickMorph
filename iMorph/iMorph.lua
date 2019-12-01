@@ -29,6 +29,15 @@ local EnchantSlots = {
 	[2] = INVSLOT_OFFHAND,
 }
 
+function CM:iMorphReset()
+	SetRace(select(3, UnitRace("player")), UnitSex("player")-1)
+	for slot in pairs(CM.SlotNames) do
+		SetItem(slot, GetInventoryItemID("player", slot) or 0)
+	end
+	SetScale(1)
+	wipe(state)
+end
+
 local help = {
 	"|cff7fff00iMorph|r commands:",
 	".reset",
@@ -55,12 +64,7 @@ local commands = {
 		end
 	end,
 	reset = function()
-		SetRace(select(3, UnitRace("player")), UnitSex("player")-1)
-		for slot in pairs(CM.SlotNames) do
-			SetItem(slot, GetInventoryItemID("player", slot) or 0)
-		end
-		SetScale(1)
-		wipe(state)
+		CM:iMorphReset()
 	end,
 	-- todo: fix hostile races bug
 	--  own faction is hostile and "cant speak in that language"
@@ -117,14 +121,12 @@ local commands = {
 			SetItem(slot, item)
 		end
 	end,
---[[
 	itemset = function(id)
 		id = tonumber(id)
 		if id then
-			iMorphFrame:SetItemSet(id)
+			CM:MorphItemSet(id, true)
 		end
 	end,
-]]
 	enchant = function(weapon, enchant)
 		weapon, enchant = tonumber(weapon), tonumber(enchant)
 		if weapon and enchant then

@@ -123,7 +123,7 @@ CM.morphers = {
 		-- morphers can be unloaded and initialized at any later moment
 		loaded = function() return IMorphInfo end,
 		reset = function() -- todo: add reset to naked
-			iMorphFrame:Reset()
+			CM:iMorphReset()
 		end,
 		model = function(_, displayID)
 			Morph(displayID)
@@ -140,11 +140,6 @@ CM.morphers = {
 		item = function(_, slotID, itemID)
 			SetItem(slotID, itemID)
 		end,
-		--[[
-		itemset = function(itemSetID) -- handled in iMorph Lua
-			iMorphFrame:SetItemSet(itemSetID)
-		end,
-		]]
 		scale = function(_, value)
 			SetScale(value)
 		end,
@@ -389,17 +384,21 @@ function CM.MorphTransmogItem(frame)
 	end
 end
 
-function CM:MorphItemSet(itemSetID)
-	local morph = CM:CanMorph()
+function CM:MorphItemSet(itemSetID, override)
+	local morph = CM:CanMorph(override)
 	if morph then
-		if morph.item then -- reset gear to naked first
+		local itemset = self:GetFileData().Classic.ItemSet[itemSetID]
+		if morph.item and itemset then
+			-- reset gear to naked first
 			-- todo: only do it for gear item sets instead of weapon sets
 			for _, slot in pairs(GearSlots) do
 				morph.item("player", slot, 0)
 			end
-		end
-		if morph.itemset then
-			morph.itemset(itemSetID)
+			for slot, item in pairs(itemset) do
+				if type(slot) == "number" then -- ignore "name" key
+					SetItem(slot, item)
+				end
+			end
 		end
 	end
 end
