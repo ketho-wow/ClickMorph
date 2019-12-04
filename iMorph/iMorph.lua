@@ -1,4 +1,5 @@
 local CM = ClickMorph
+if not CM.isClassic then return end
 local db
 local state
 
@@ -52,7 +53,7 @@ local EnchantSlots = {
 	[2] = INVSLOT_OFFHAND,
 }
 
-function iMorphLua:iMorphReset()
+function iMorphLua:Reset()
 	SetRace(select(3, UnitRace("player")), UnitSex("player")-1)
 	for slot in pairs(CM.SlotNames) do
 		SetItem(slot, GetInventoryItemID("player", slot) or 0)
@@ -87,7 +88,7 @@ local commands = {
 		end
 	end,
 	reset = function()
-		iMorphLua:iMorphReset()
+		iMorphLua:Reset()
 	end,
 	-- todo: fix hostile races bug
 	--  own faction is hostile and "cant speak in that language"

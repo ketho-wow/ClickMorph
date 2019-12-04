@@ -123,7 +123,7 @@ CM.morphers = {
 		-- morphers can be unloaded and initialized at any later moment
 		loaded = function() return IMorphInfo end,
 		reset = function() -- todo: add reset to naked
-			iMorphLua:iMorphReset()
+			iMorphLua:Reset()
 		end,
 		model = function(_, displayID)
 			Morph(displayID)
