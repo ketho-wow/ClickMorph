@@ -32,6 +32,13 @@ else
 	return
 end
 
+tinsert(CM.db_callbacks, function()
+	db = ClickMorphDB
+	db.version = VERSION
+	state = db.state
+	state.form = state.form or {}
+end)
+
 local iMorphLua = CreateFrame("Frame")
 _G.iMorphLua = iMorphLua
 
@@ -49,11 +56,11 @@ function iMorphLua:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 		if GetClickMorph() then
 			print("ClickMorph: overriding iMorph")
 		end
-		
-		if isInitialLogin then
-			print("PLAYER_ENTERING_WORLD isInitialLogin")
-			self:Initialize()
-		elseif not isReloadingUi then -- zoning between instance maps
+
+		if isInitialLogin or isReloadingUi then
+			print("PLAYER_ENTERING_WORLD", isInitialLogin, isReloadingUi)
+			self:Initialize(isInitialLogin)
+		else -- zoning between instance maps
 			print("zoning")
 			self:Remorph()
 		end
@@ -68,36 +75,34 @@ function iMorphLua:UPDATE_SHAPESHIFT_FORM()
 end
 
 -- usually fires right after UPDATE_SHAPESHIFT_FORM
-function iMorphLua:UNIT_MODEL_CHANGED(target)
-	Spew("UNIT_MODEL_CHANGED", GetTime(), target, shapeshifted)
-	if shapeshifted then
-		-- morphing triggers UNIT_MODEL_CHANGED again, avoid an infinite loop
-		shapeshifted = false
-		local form, formid = GetShapeshiftForm(), GetShapeshiftFormID()
-		--print(form, formid, state.form[form])
-		if form and state.form[form] then
-			print("morphed to form", form, formid)
-			Morph(state.form[form])
-		elseif form == 0 and state.morph then
-			print("morphed back to humanoid form", form, formid)
-			Morph(state.morph)
+function iMorphLua:UNIT_MODEL_CHANGED(unit)
+	print("UNIT_MODEL_CHANGED", unit)
+	if unit == "player" then
+		Spew("UNIT_MODEL_CHANGED", GetTime(), target, shapeshifted)
+		if shapeshifted then
+			-- morphing triggers UNIT_MODEL_CHANGED again, avoid an infinite loop
+			shapeshifted = false
+			local form, formid = GetShapeshiftForm(), GetShapeshiftFormID()
+			--print(form, formid, state.form[form])
+			if form and state.form[form] then
+				print("morphed to form", form, formid)
+				Morph(state.form[form])
+			elseif form == 0 and state.morph then
+				print("morphed back to humanoid form", form, formid)
+				Morph(state.morph)
+			end
 		end
 	end
 end
 
-tinsert(CM.db_callbacks, function()
-	db = ClickMorphDB
-	db.version = VERSION
-	state = db.state
-	state.form = state.form or {}
-end)
-
 -- when imorph is injecting
-function iMorphLua:Initialize()
+function iMorphLua:Initialize(remorph)
 	print("iMorphLua:Initialize")
 	if Morph then
-		print("iMorphLua:Initialize remorphing")
-		self:Remorph()
+		if remorph then
+			print("iMorphLua:Initialize remorphing")
+			self:Remorph()
+		end
 		-- UPDATE_SHAPESHIFT_FORM can fire before imorph is registered
 		if canShapeshift then
 			iMorphLua:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
