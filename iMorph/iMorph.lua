@@ -53,7 +53,7 @@ iMorphLua:SetScript("OnEvent", iMorphLua.OnEvent)
 function iMorphLua:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 	initTime = time()
 	C_Timer.After(0, function() -- imorph api is not yet registered
-		if GetClickMorph() then
+		if GetClickMorph and GetClickMorph() then
 			print("ClickMorph: overriding iMorph")
 		end
 
