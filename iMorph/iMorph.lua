@@ -1,26 +1,10 @@
 local CM = ClickMorph
 if not CM.isClassic then return end
-local db
-local state
 
-local VERSION = 1
-local debug_mode
-local initTime
-
-local SEX_MALE = 1
-local SEX_FEMALE = 2
-
-local EnchantSlots = {
-	[1] = INVSLOT_MAINHAND,
-	[2] = INVSLOT_OFFHAND,
-}
-
---local FLAG_SMARTMORPH = 2
-local playerClass = select(2, UnitClass("player"))
-local canShapeshift = playerClass == "DRUID" or playerClass == "SHAMAN"
-local shapeshifted
-
+iMorphLua = CreateFrame("Frame")
+iMorphLua.debug = true
 CM.override = true
+
 if CM.override then -- temporary dummy table
 	IMorphInfo = IMorphInfo or {
 		items = {},
@@ -32,15 +16,84 @@ else
 	return
 end
 
+local iMorphLua = iMorphLua
+local VERSION = 1
+
+local db
+local state
+
+local initTime
+local skipevent
+local isManuallyMorphing
+local activeMorphRace
+
+local SEX_MALE = 1
+local SEX_FEMALE = 2
+--local FLAG_SMARTMORPH = 2
+
+local EnchantSlots = {
+	[1] = INVSLOT_MAINHAND,
+	[2] = INVSLOT_OFFHAND,
+}
+
+-- for scanning the current model
+local p = CreateFrame("PlayerModel")
+if iMorphLua.DEBUG then
+	p:SetSize(250, 250)
+	p:SetPoint("CENTER", 200, 0)
+end
+
+local PlayerModelFD = {
+	[119940] = "humanmale.m2",
+	[119563] = "humanfemale.m2",
+	[121287] = "orcmale.m2",
+	[121087] = "orcfemale.m2",
+	[118355] = "dwarfmale.m2",
+	[118135] = "dwarffemale.m2",
+	[120791] = "nightelfmale.m2",
+	[120590] = "nightelffemale.m2",
+	[121768] = "scourgemale.m2",
+	[121608] = "scourgefemale.m2",
+	[122055] = "taurenmale.m2",
+	[121961] = "taurenfemale.m2",
+	[119159] = "gnomemale.m2",
+	[119063] = "gnomefemale.m2",
+	[122560] = "trollmale.m2",
+	[122414] = "trollfemale.m2",
+	[119376] = "goblinmale.m2",
+	[119369] = "goblinfemale.m2",
+}
+
+local PlayerModelRace = {
+	{119940, 119563}, -- Human
+	{121287, 121087}, -- Orc
+	{118355, 118135}, -- Dwarf
+	{120791, 120590}, -- Night Elf
+	{121768, 121608}, -- Undead
+	{122055, 121961}, -- Tauren
+	{119159, 119063}, -- Gnome
+	{122560, 122414}, -- Troll
+	{119376, 119369}, -- Goblin
+}
+
+-- actual player info
+local player = {
+	race = select(3, UnitRace("player")),
+	sex = UnitSex("player"),
+	class = select(2, UnitClass("player")),
+}
+player.playermodel = PlayerModelRace[player.race][player.sex-1]
+
+local canShapeshift = player.class == "DRUID" or player.class == "SHAMAN"
+local shapeshifted
+
+-- update DB
 tinsert(CM.db_callbacks, function()
 	db = ClickMorphDB
 	db.version = VERSION
 	state = db.state
 	state.form = state.form or {}
 end)
-
-local iMorphLua = CreateFrame("Frame")
-_G.iMorphLua = iMorphLua
 
 function iMorphLua:OnEvent(event, ...)
 	self[event](self, ...)
@@ -54,14 +107,14 @@ function iMorphLua:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 	initTime = time()
 	C_Timer.After(0, function() -- imorph api is not yet registered
 		if GetClickMorph and GetClickMorph() then
-			print("ClickMorph: overriding iMorph")
+			self:DebugPrint("ClickMorph: overriding iMorph")
 		end
 
 		if isInitialLogin or isReloadingUi then
-			print("PLAYER_ENTERING_WORLD", isInitialLogin, isReloadingUi)
+			self:DebugPrint("PLAYER_ENTERING_WORLD", isInitialLogin, isReloadingUi)
 			self:Initialize(isInitialLogin)
 		else -- zoning between instance maps
-			print("zoning")
+			self:DebugPrint("zoning")
 			self:Remorph()
 		end
 	end)
@@ -70,37 +123,59 @@ end
 -- fires 2 times when shapeshifting into a form and 3 times when shifting back
 function iMorphLua:UPDATE_SHAPESHIFT_FORM()
 	local form, formid = GetShapeshiftForm(), GetShapeshiftFormID()
-	Spew("UPDATE_SHAPESHIFT_FORM", GetTime(), form, formid)
+	self:DebugPrint(GetTime(), "UPDATE_SHAPESHIFT_FORM", form, formid)
 	shapeshifted = true
 end
 
 -- usually fires right after UPDATE_SHAPESHIFT_FORM
 function iMorphLua:UNIT_MODEL_CHANGED(unit)
-	print("UNIT_MODEL_CHANGED", unit)
 	if unit == "player" then
-		Spew("UNIT_MODEL_CHANGED", GetTime(), target, shapeshifted)
-		if shapeshifted then
-			-- morphing triggers UNIT_MODEL_CHANGED again, avoid an infinite loop
-			shapeshifted = false
-			local form, formid = GetShapeshiftForm(), GetShapeshiftFormID()
-			--print(form, formid, state.form[form])
-			if form and state.form[form] then
-				print("morphed to form", form, formid)
-				Morph(state.form[form])
-			elseif form == 0 and state.morph then
-				print("morphed back to humanoid form", form, formid)
-				Morph(state.morph)
+		p:SetUnit("player")
+		local fileID = p:GetModelFileID()
+		if fileID then
+			self:DebugPrint(GetTime(), "UNIT_MODEL_CHANGED", fileID, PlayerModelFD[fileID])
+			if shapeshifted then
+				-- morphing triggers UNIT_MODEL_CHANGED again, avoid an infinite loop
+				shapeshifted = false
+				local form, formid = GetShapeshiftForm(), GetShapeshiftFormID()
+				--print(form, formid, state.form[form])
+				if form and state.form[form] then
+					print("morphed to form", form, formid)
+					Morph(state.form[form])
+				elseif form == 0 and state.morph then
+					print("morphed back to humanoid form", form, formid)
+					Morph(state.morph)
+				end
+			-- when model is the actual player model and 
+			--  when you are the initial race and sex it shouldnt trigger a remorph when manually morphing
+			elseif PlayerModelFD[fileID] and player.playermodel == fileID and not isManuallyMorphing then
+				if state.morph then
+					self:Remorph()
+				elseif activeMorphRace ~= fileID then -- target race/sex is different
+					if not skipevent then
+						self:DebugPrint("^ first UNIT_MODEL_CHANGED")
+						self:Remorph()
+						skipevent = true
+					else
+						self:DebugPrint("^ second UNIT_MODEL_CHANGED")
+						skipevent = false
+					end
+				end
+			
 			end
 		end
+		isManuallyMorphing = false
 	end
 end
 
 -- when imorph is injecting
 function iMorphLua:Initialize(remorph)
-	print("iMorphLua:Initialize")
+	self:DebugPrint("iMorphLua:Initialize")
 	if Morph then
+		hooksecurefunc("SetRace", function(race, sex)
+			activeMorphRace = PlayerModelRace[race][sex]
+		end)
 		if remorph then
-			print("iMorphLua:Initialize remorphing")
 			self:Remorph()
 		end
 		-- UPDATE_SHAPESHIFT_FORM can fire before imorph is registered
@@ -120,7 +195,7 @@ function iMorphLua:OnInject()
 end
 
 function iMorphLua:Remorph()
-	print("iMorphLua:Remorph")
+	self:DebugPrint("iMorphLua:Remorph")
 	if Morph then
 		if state.race or state.sex then
 			local race = state.race or select(3, UnitRace("player"))
@@ -128,7 +203,6 @@ function iMorphLua:Remorph()
 			SetRace(race, sex)
 		end
 		if state.morph then
-			--print("morph", state.morph)
 			Morph(state.morph)
 		end
 		if state.scale then
@@ -144,6 +218,16 @@ function iMorphLua:Reset()
 	end
 	SetScale(1)
 	wipe(state)
+end
+
+function iMorphLua:DebugPrint(...)
+	if self.debug then
+		if Spew then
+			Spew("", ...)
+		else
+			print(...)
+		end
+	end
 end
 
 local help = {
@@ -183,6 +267,7 @@ local commands = {
 			SetRace(raceID, sex)
 			state.race = raceID
 			state.morph = nil
+			isManuallyMorphing = true
 		end
 	end,
 	gender = function(sexID)
@@ -200,6 +285,7 @@ local commands = {
 				SetRace(race, SEX_MALE)
 				state.sex = SEX_MALE
 			end
+			isManuallyMorphing = true
 		end
 		state.morph = nil
 	end,
@@ -207,15 +293,14 @@ local commands = {
 		id = tonumber(id)
 		if id then
 			Morph(id)
-			if canShapeshift then
-				local form = GetShapeshiftForm()
-				if form > 0 then
-					state.form[form] = id
-				end
+			local form = GetShapeshiftForm()
+			if canShapeshift and form > 0 then
+				state.form[form] = id
 			else
 				state.morph = id
 			end
 			state.race, state.sex = nil, nil
+			isManuallyMorphing = true
 		end
 	end,
 	morphpet = function(id)
