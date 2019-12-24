@@ -167,7 +167,7 @@ local SEC_BUTTON_COUNT = 0
 
 function CM:AtlasLootClassic()
 	_G["AtlasLoot_GUI-Frame"]:HookScript("OnShow", function()
-		if not shownAtlasLootMessage then
+		if Morph and not shownAtlasLootMessage then
 			self:PrintChat("For AtlasLoot you need to press |cff71D5FFAlt+Shift|r while clicking")
 			shownAtlasLootMessage = true
 		end
