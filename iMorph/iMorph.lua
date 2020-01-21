@@ -3,7 +3,7 @@ if not CM.isClassic then return end
 
 iMorphLua = CreateFrame("Frame")
 iMorphLua.debug = true
-CM.override = true
+CM.override = false
 
 if CM.override then -- temporary dummy table
 	IMorphInfo = IMorphInfo or {
