@@ -2,8 +2,11 @@ local CM = ClickMorph
 if not CM.isClassic then return end
 
 iMorphLua = CreateFrame("Frame")
-iMorphLua.debug = true
+iMorphLua.debug = false
 CM.override = false
+
+-- dummy func to fix imorph error because of my sloppy coding
+iMorphLua.OnInject = function() end
 
 if CM.override then -- temporary dummy table
 	IMorphInfo = IMorphInfo or {
