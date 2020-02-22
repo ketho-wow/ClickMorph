@@ -33,25 +33,26 @@ local weaponSlots = {
 
 -- C_TransmogCollection.GetCategoryInfo is filtered by class proficiency
 local weaponCategories = {
-	-- name, isWeapon, canEnchant, canMainHand, canOffHand
-	[12] = {"Wands", true, true, true, false},
-	[13] = {"One-Handed Axes", true, true, true, false},
-	[14] = {"One-Handed Swords", true, true, true, false},
-	[15] = {"One-Handed Maces", true, true, true, false},
-	[16] = {"Daggers", true, true, true, false},
-	[17] = {"Fist Weapons", true, true, true, true},
-	[18] = {"Shields", true, false, false, true},
-	[19] = {"Held In Off-hand", true, false, false, true},
-	[20] = {"Two-Handed Axes", true, true, true, false},
-	[21] = {"Two-Handed Swords", true, true, true, false},
-	[22] = {"Two-Handed Maces", true, true, true, false},
-	[23] = {"Staves", true, true, true, false},
-	[24] = {"Polearms", true, true, true, false},
-	[25] = {"Bows", true, false, true, false},
-	[26] = {"Guns", true, false, true, false},
-	[27] = {"Crossbows", true, false, true, false},
-	[28] = {"Warglaives", true, true, true, true},
-	[29] = {"Legion Artifacts", true, true, true, false},
+	-- name, isWeapon, canEnchant, canMainHand
+	-- fallback for canOffHand to original values
+	[12] = {"Wands", true, true, true},
+	[13] = {"One-Handed Axes", true, true, true},
+	[14] = {"One-Handed Swords", true, true, true},
+	[15] = {"One-Handed Maces", true, true, true},
+	[16] = {"Daggers", true, true, true,},
+	[17] = {"Fist Weapons", true, true, true},
+	[18] = {"Shields", true, false, false},
+	[19] = {"Held In Off-hand", true, false, false},
+	[20] = {"Two-Handed Axes", true, true, true},
+	[21] = {"Two-Handed Swords", true, true, true},
+	[22] = {"Two-Handed Maces", true, true, true},
+	[23] = {"Staves", true, true, true},
+	[24] = {"Polearms", true, true, true},
+	[25] = {"Bows", true, false, true},
+	[26] = {"Guns", true, false, true},
+	[27] = {"Crossbows", true, false, true},
+	[28] = {"Warglaives", true, true, true},
+	[29] = {"Legion Artifacts", true, true, true},
 }
 
 function f:OnEvent(event, arg1)
@@ -253,10 +254,11 @@ function f:HookWardrobe()
 	local oldGetCategoryInfo = C_TransmogCollection.GetCategoryInfo
 
 	function C_TransmogCollection.GetCategoryInfo(categoryID)
-		local name = oldGetCategoryInfo(categoryID)
+		local name, _, _, _, canOffHand = oldGetCategoryInfo(categoryID)
 		local cats = weaponCategories[categoryID]
 		if cats then
 			cats[1] = name or cats[1] -- prioritizy any localized name
+			cats[5] = canOffHand -- fallback since this is different between classes
 			return unpack(weaponCategories[categoryID])
 		else
 			return name
