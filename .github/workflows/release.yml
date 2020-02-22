@@ -1,0 +1,23 @@
+name: Release AddOn
+
+on:
+  push:
+    tags:
+      - '**'
+
+env:
+  GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      - uses: BigWigsMods/packager@master
+        with:
+          args: release.sh -g 1.13.3
+
+      - uses: BigWigsMods/packager@master
+        with:
+          args: release.sh
