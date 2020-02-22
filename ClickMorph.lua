@@ -297,7 +297,9 @@ function CM.MorphItem(item)
 		local itemID, itemLink, equipLoc = CM:GetItemInfo(item)
 		local slotID = InvTypeToSlot[equipLoc]
 		if slotID then
-			if DualWieldSlot[equipLoc] and IsSpellKnown(674) then -- Rogue/Warrior/Hunter Dual Wield
+			local DualWield = IsSpellKnown(674) -- Level 10/20 Rogue/Warrior/Hunter (Classic)
+			local TitansGrip = IsSpellKnown(46917) -- Fury Warrior (Retail)
+			if DualWieldSlot[equipLoc] and (DualWield or TitansGrip) then
 				if lastWeaponSlot then
 					slotID = AltenateWeaponSlot[lastWeaponSlot]
 				end
