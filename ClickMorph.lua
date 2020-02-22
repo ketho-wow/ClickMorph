@@ -60,14 +60,9 @@ local GearSlots = {
 	INVSLOT_BACK, -- 15
 }
 
-local DualWieldSlot = {
-	INVTYPE_2HWEAPON = true,
-	INVTYPE_WEAPON = true,
-	INVTYPE_WEAPONMAINHAND = true,
-	INVTYPE_WEAPONOFFHAND = true,
-}
+local lastWeaponSlot = INVSLOT_OFFHAND
 
-local AltenateWeaponSlot = {
+local DualWieldSlot = {
 	[INVSLOT_MAINHAND] = INVSLOT_OFFHAND,
 	[INVSLOT_OFFHAND] = INVSLOT_MAINHAND,
 }
@@ -289,7 +284,18 @@ function CM:GetItemInfo(item)
 	end
 end
 
-local lastWeaponSlot
+-- only alternate clickmorphing both weapon slots when the player is actually dual wielding since the animation will reflect that
+-- IsDualWielding seems to return true when both MH/OH or only OH are equipped with a (one or two-hand) weapon
+-- in jMorph it will conflict since they also clickmorph from the appearances tab, e.g. when we morph offhand they will morph mainhand simultaenously
+-- bug: when trying to morph shields it will attempt to morph MH to shield and fail but cba to check that with MorphItemBySource not providing equiploc
+function CM:GetDualWieldSlot(slot)
+	if DualWieldSlot[slot] and IsDualWielding() then
+		lastWeaponSlot = DualWieldSlot[lastWeaponSlot]
+		return lastWeaponSlot
+	else
+		return slot
+	end
+end
 
 function CM.MorphItem(item)
 	local morph = CM:CanMorph()
@@ -297,14 +303,7 @@ function CM.MorphItem(item)
 		local itemID, itemLink, equipLoc = CM:GetItemInfo(item)
 		local slotID = InvTypeToSlot[equipLoc]
 		if slotID then
-			local DualWield = IsSpellKnown(674) -- Level 10/20 Rogue/Warrior/Hunter (Classic)
-			local TitansGrip = IsSpellKnown(46917) -- Fury Warrior (Retail)
-			if DualWieldSlot[equipLoc] and (DualWield or TitansGrip) then
-				if lastWeaponSlot then
-					slotID = AltenateWeaponSlot[lastWeaponSlot]
-				end
-				lastWeaponSlot = slotID
-			end
+			slotID = CM:GetDualWieldSlot(slotID)
 			morph.item("player", slotID, itemID)
 			CM:PrintChat(format("Morphed |cffFFFF00%s|r to item |cff71D5FF%d:%d|r %s", CM.SlotNames[slotID], itemID, 0, itemLink))
 		end
@@ -317,6 +316,7 @@ function CM:MorphItemBySource(unit, source)
 	local morph = self:CanMorph()
 	if morph and morph.item then
 		local slotID = C_Transmog.GetSlotForInventoryType(source.invType)
+		slotID = self:GetDualWieldSlot(slotID)
 		local itemLink = select(6, C_TransmogCollection.GetAppearanceSourceInfo(source.sourceID))
 		local itemText = itemLink:find("%[%]") and CM.ItemAppearance and CM.ItemAppearance[source.visualID] or itemLink
 		morph.item(unit, slotID, source.itemID, source.itemModID)
