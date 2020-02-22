@@ -11,7 +11,7 @@
 ## SavedVariables: ClickMorphDB
 
 Libs\LibStub\LibStub.lua
-Libs\StdUi\StdUi.xml
+Libs\StdUiV2\StdUi.xml
 
 ClickMorph.lua
 Database.lua
