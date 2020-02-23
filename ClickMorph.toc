@@ -9,6 +9,7 @@
 ## Notes: Lets you alt-click to morph
 ## Author: Ketho, Icesythe7
 ## SavedVariables: ClickMorphDB
+## SavedVariablesPerCharacter: ClickMorph_iMorphV1
 
 Libs\LibStub\LibStub.lua
 Libs\StdUiV2\StdUi.xml
@@ -16,7 +17,8 @@ Libs\StdUiV2\StdUi.xml
 ClickMorph.lua
 Database.lua
 
-iMorph\iMorph.lua
+iMorph\iMorphV1.lua
+iMorph\iMorphLua.lua
 
 Gui.lua
 Npc.lua

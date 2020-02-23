@@ -3,8 +3,9 @@ local db
 CM.db_callbacks = {}
 
 local defaults = {
-	db_version = 4,
-	state = {},
+	db_version = 5,
+	imorphlua = {},
+	imorphv1 = {}, -- hack together something for imorph v1
 }
 
 local f = CreateFrame("Frame")

@@ -6,7 +6,12 @@ iMorphLua.debug = false
 CM.override = false
 
 -- dummy func to fix imorph error because of my sloppy coding
-iMorphLua.OnInject = function() end
+-- IMorphInfo doesnt exist yet here
+iMorphLua.OnInject = function()
+	if ClickMorphDB.imorphv1.remember then
+		iMorphV1:Remorph()
+	end
+end
 
 if CM.override then -- temporary dummy table
 	IMorphInfo = IMorphInfo or {
@@ -94,7 +99,7 @@ local shapeshifted
 tinsert(CM.db_callbacks, function()
 	db = ClickMorphDB
 	db.version = VERSION
-	state = db.state
+	state = db.imorphlua
 	state.form = state.form or {}
 end)
 

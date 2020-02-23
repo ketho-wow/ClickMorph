@@ -120,6 +120,15 @@ function CM:CreateGUI()
 		self:MorphScale("player", value)
 	end
 
+	-- remember morph
+	local remember = StdUi:Checkbox(gui, "Remorph on Inject/Relog")
+	StdUi:GlueTop(remember, scale_slider, 0, -40, "LEFT")
+	remember:SetChecked(ClickMorphDB.imorphv1.remember)
+
+	remember.OnValueChanged = function(widget, state)
+		ClickMorphDB.imorphv1.remember = state
+	end
+
 	-- reset
 	local reset_btn = StdUi:Button(gui, 100, 20, "|cffFF0000"..RESET.."|r")
 	StdUi:GlueBottom(reset_btn, gui, -10, 10, "RIGHT")
