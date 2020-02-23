@@ -139,7 +139,8 @@ function CM:CreateGUI()
 		model_eb:SetText(0)
 		npc_eb:SetText("")
 		mount_eb:SetText("")
-		scale_slider:SetValue(1)
+		scale_slider:SetValue(1) -- doesnt change scale if the slider value is already at 1
+		self:MorphScale("player", 1)
 		self:ResetMorph()
 	end)
 end
