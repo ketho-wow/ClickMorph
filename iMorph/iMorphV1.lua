@@ -31,9 +31,9 @@ end
 -- store morph info before logging out
 function iMorphV1:PLAYER_LOGOUT()
 	-- workaround for scale
-	local scale = ClickMorph_iMorphV1.state.scale
+	local tempscale = ClickMorph_iMorphV1.tempscale
 	ClickMorph_iMorphV1.state = CopyTable(IMorphInfo)
-	ClickMorph_iMorphV1.state.scale = scale
+	ClickMorph_iMorphV1.state.scale = tempscale
 end
 
 function iMorphV1:Remorph()
@@ -54,6 +54,11 @@ function iMorphV1:Remorph()
 		end
 		if state.scale then
 			SetScale(state.scale)
+		end
+		if next(state.styles) then
+			for func, value in pairs(state.styles) do
+				_G[func](value)
+			end
 		end
 		--ClickMorph:PrintChat("Remorphed")
 	end)

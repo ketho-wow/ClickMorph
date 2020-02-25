@@ -119,6 +119,7 @@ CM.morphers = {
 		loaded = function() return IMorphInfo end,
 		reset = function() -- todo: add reset to naked
 			iMorphFrame:Reset()
+			wipe(ClickMorph_iMorphV1)
 		end,
 		model = function(_, displayID)
 			Morph(displayID)
@@ -137,7 +138,7 @@ CM.morphers = {
 		end,
 		scale = function(_, value)
 			SetScale(value)
-			ClickMorph_iMorphV1.state.scale = value -- workaround
+			ClickMorph_iMorphV1.tempscale = value -- workaround
 		end,
 		--SetEnchant(slotId, enchantId)
 		--SetTitle(titleId)
