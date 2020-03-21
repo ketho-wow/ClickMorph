@@ -113,10 +113,10 @@ function CM:CanMorphMount()
 	if isMounted and not onTaxi then
 		return true
 	else
-		if not isMounted then
-			CM:PrintChat("You need to be mounted", 1, 1, 0)
-		elseif onTaxi then
+		if onTaxi then
 			CM:PrintChat("You need to be not on a flight path", 1, 1, 0)
+		elseif not isMounted then
+			CM:PrintChat("You need to be mounted", 1, 1, 0)
 		end
 	end
 end
