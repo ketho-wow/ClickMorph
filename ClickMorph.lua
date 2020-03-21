@@ -208,28 +208,6 @@ CM.morphers = {
 		-- shapeshift
 		-- weather
 	},
-	LucidMorph = { -- retail
-		loaded = function() return lm end,
-		model = function(_, displayID)
-			lm("model", displayID)
-			lm("morph")
-		end,
-		mount = function(_, displayID)
-			lm("mount", displayID)
-			lm("morph")
-			return true
-		end,
-		item = function(_, slotID, itemID, itemModID)
-			lm(CM.SlotNames[slotID], itemID, itemModID)
-		end,
-		update = function()
-			lm("morph")
-		end,
-		enchant = function(_, slotID, visualID)
-			lm(CM.SlotNames[slotID], nil, nil, visualID)
-			lm("morph")
-		end,
-	},
 }
 
 function CM:ResetMorph()
