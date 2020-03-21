@@ -70,7 +70,9 @@ local DualWieldSlot = {
 local genders = {MALE, FEMALE}
 
 function CM:PrintChat(msg, r, g, b)
-	DEFAULT_CHAT_FRAME:AddMessage(format("|cff7fff00ClickMorph|r: |r%s", msg), r, g, b)
+	if not ClickMorphDB.silent then
+		DEFAULT_CHAT_FRAME:AddMessage(format("|cff7fff00ClickMorph|r: |r%s", msg), r, g, b)
+	end
 end
 
 function CM:GetFileData(frame)
@@ -106,10 +108,16 @@ function CM:CanMorph(override)
 end
 
 function CM:CanMorphMount()
-	if IsMounted() and not UnitOnTaxi("player") then
+	local isMounted = IsMounted()
+	local onTaxi = UnitOnTaxi("player")
+	if isMounted and not onTaxi then
 		return true
 	else
-		CM:PrintChat("You need to be mounted and not on a flight path", 1, 1, 0)
+		if not isMounted then
+			CM:PrintChat("You need to be mounted", 1, 1, 0)
+		elseif onTaxi then
+			CM:PrintChat("You need to be not on a flight path", 1, 1, 0)
+		end
 	end
 end
 

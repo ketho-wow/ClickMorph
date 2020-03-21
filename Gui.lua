@@ -129,6 +129,15 @@ function CM:CreateGUI()
 		ClickMorphDB.imorphv1.remember = state
 	end
 
+	-- silent mode
+	local silent = StdUi:Checkbox(gui, "Silent Mode")
+	StdUi:GlueTop(silent, remember, 0, -20, "LEFT")
+	silent:SetChecked(ClickMorphDB.silent)
+
+	silent.OnValueChanged = function(widget, state)
+		ClickMorphDB.silent = state
+	end
+
 	-- reset
 	local reset_btn = StdUi:Button(gui, 100, 20, "|cffFF0000"..RESET.."|r")
 	StdUi:GlueBottom(reset_btn, gui, -10, 10, "RIGHT")
