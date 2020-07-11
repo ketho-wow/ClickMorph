@@ -28,8 +28,10 @@ function CM:MogIt()
 				local oldOnClick = model:GetScript("OnClick")
 				model:SetScript("OnClick", function(frame, button)
 					-- prevent cycling through items when pressing alt
-					if IsAltKeyDown() then
-						self:MorphMogItCatalogue(frame)
+					if IsAltKeyDown() then -- MorphMogItCatalogue
+						local data = frame.data
+						local source = C_TransmogCollection.GetSourceInfo(data.value[data.cycle])
+						self:MorphItemBySource("player", source)
 					else
 						oldOnClick(frame, button)
 					end
@@ -44,29 +46,26 @@ function CM:MogIt()
 	end)
 end
 
-function CM:MorphMogItCatalogue(frame)
-	local data = frame.data
-	local source = C_TransmogCollection.GetSourceInfo(data.value[data.cycle])
-	self:MorphItemBySource("player", source)
-end
-
 function CM.MorphMogItPreview(frame)
-	local slots = {}
-	-- not sure where mogit stores the preview sourceids, get it from the item instead
-	for _, slot in pairs(frame.parent.slots) do
-		if slot.item then
-			local _, sourceID = C_TransmogCollection.GetItemInfo(slot.item)
-			local source = C_TransmogCollection.GetSourceInfo(sourceID)
-			local slotId = C_Transmog.GetSlotForInventoryType(source.invType)
-			tinsert(slots, {slotId, source})
+	if IsAltKeyDown() then
+		CM:Undress()
+		local slots = {}
+		-- not sure where mogit stores the preview sourceids, get it from the item instead
+		for _, slot in pairs(frame.parent.slots) do
+			if slot.item then
+				local _, sourceID = C_TransmogCollection.GetItemInfo(slot.item)
+				local source = C_TransmogCollection.GetSourceInfo(sourceID)
+				local slotId = C_Transmog.GetSlotForInventoryType(source.invType)
+				tinsert(slots, {slotId, source})
+			end
 		end
-	end
-
-	sort(slots, function(a, b)
-		return a[1] < b[1]
-	end)
-	for _, v in pairs(slots) do
-		CM:MorphItemBySource("player", v[2])
+		sort(slots, function(a, b)
+			return a[1] < b[1]
+		end)
+		for _, v in pairs(slots) do
+			CM:MorphItemBySource("player", v[2], true)
+		end
+		CM:PrintChat(format("items -> |cff71D5ffMogIt|r"))
 	end
 end
 
@@ -165,6 +164,23 @@ end
 local shownAtlasLootMessage
 local SEC_BUTTON_COUNT = 0
 
+local function IsAtlasLootKeybind()
+	return IsAltKeyDown() and IsShiftKeyDown()
+end
+
+local function HookAtlasLootButton(btn)
+	local origOnClick = btn:GetScript("OnClick")
+	btn:SetScript("OnClick", function(frame, button, down)
+		if IsAtlasLootKeybind() then
+			if frame.ItemID then
+				CM:MorphItem("player", frame.ItemID)
+			end
+		else
+			origOnClick(frame, button, down)
+		end
+	end)
+end
+
 function CM:AtlasLootClassic()
 	_G["AtlasLoot_GUI-Frame"]:HookScript("OnShow", function()
 		if Morph and not shownAtlasLootMessage then
@@ -177,12 +193,12 @@ function CM:AtlasLootClassic()
 		local btn = _G["AtlasLoot_Button_"..i]
 		local origOnClick = btn:GetScript("OnClick")
 		btn:SetScript("OnClick", function(frame, button, down)
-			if IsAltKeyDown() and IsShiftKeyDown() then
+			if IsAtlasLootKeybind() then
 				if type(frame.SetID) == "number" then
 					-- delegate to iMorph .itemset instead of iterating over items field
 					self:MorphItemSet(frame.SetID)
 				elseif frame.ItemID then
-					self.MorphItem(frame.ItemID)
+					self:MorphItem("player", frame.ItemID)
 				end
 			else
 				origOnClick(frame, button, down)
@@ -193,14 +209,36 @@ function CM:AtlasLootClassic()
 	hooksecurefunc(AtlasLoot.Button, "CreateSecOnly", function()
 		SEC_BUTTON_COUNT = SEC_BUTTON_COUNT + 1
 		local btn = _G["AtlasLoot_SecButton_"..SEC_BUTTON_COUNT]
-		local origOnClick = btn:GetScript("OnClick")
-		btn:SetScript("OnClick", function(frame, button, down)
-			if IsAltKeyDown() and IsShiftKeyDown() then
-				if frame.ItemID then
-					self.MorphItem(frame.ItemID)
+		HookAtlasLootButton(btn)
+	end)
+	-- favourites; most functions are local so its kinda difficult to hook into properly
+	local Favourites = AtlasLoot.Addons:GetAddon("Favourites")
+	hooksecurefunc(Favourites.GUI, "Create", function()
+		-- scrollframe items
+		hooksecurefunc(Favourites.GUI.frame.content.scrollFrame, "SetItems", function(sf)
+			for _, btn in pairs(sf.itemButtons) do
+				if not btn.clickmorph then
+					HookAtlasLootButton(btn)
+					btn.clickmorph = true
 				end
-			else
-				origOnClick(frame, button, down)
+			end
+		end)
+		-- equipment slots
+		for _, slot in pairs(Favourites.GUI.frame.content.slotFrame.slots) do
+			HookAtlasLootButton(slot)
+		end
+		-- model preview
+		Favourites.GUI.frame.content.slotFrame.modelFrame:HookScript("OnMouseUp", function()
+			if IsAtlasLootKeybind() then
+				self:Undress()
+				local Favourites = AtlasLoot.Addons:GetAddon("Favourites")
+				local slots = Favourites.GUI.frame.content.slotFrame.slots
+				for _, slot in pairs(slots) do
+					if slot.ItemID then
+						self:MorphItem("player", slot.ItemID, true)
+					end
+				end
+				CM:PrintChat(format("items -> |cff71D5ffAtlasLoot|r"))
 			end
 		end)
 	end)

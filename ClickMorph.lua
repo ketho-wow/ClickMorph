@@ -36,7 +36,7 @@ local InvTypeToSlot = {
 	INVTYPE_HAND = INVSLOT_HAND, -- 10
 	INVTYPE_CLOAK = INVSLOT_BACK, -- 15
 	INVTYPE_2HWEAPON = INVSLOT_MAINHAND, -- 16
-	INVTYPE_WEAPON = INVSLOT_MAINHAND, -- 17
+	INVTYPE_WEAPON = INVSLOT_MAINHAND, -- 16
 	INVTYPE_WEAPONMAINHAND = INVSLOT_MAINHAND, -- 16
 	INVTYPE_WEAPONOFFHAND = INVSLOT_OFFHAND, -- 17
 	INVTYPE_HOLDABLE = INVSLOT_OFFHAND, -- 17
@@ -58,6 +58,7 @@ local GearSlots = {
 	INVSLOT_WRIST, -- 9
 	INVSLOT_HAND, -- 10
 	INVSLOT_BACK, -- 15
+	INVSLOT_TABARD, -- 19
 }
 
 local lastWeaponSlot = INVSLOT_OFFHAND
@@ -224,6 +225,15 @@ function CM:ResetMorph()
 	end
 end
 
+function CM:Undress()
+	local morph = self:CanMorph(true)
+	if morph and morph.item then
+		for _, invSlot in pairs(GearSlots) do -- excludes weapons
+			morph.item(unit, invSlot, 0)
+		end
+	end
+end
+
 -- Mounts
 function CM:MorphMount(unit, mountID)
 	local morph = self:CanMorph()
@@ -235,7 +245,7 @@ function CM:MorphMount(unit, mountID)
 			displayID = multipleIDs[random(#multipleIDs)].creatureDisplayID
 		end
 		if morph.mount(unit, displayID) then
-			CM:PrintChat(format("Morphed mount to |cffFFFF00%d|r %s", displayID, GetSpellLink(spellID)))
+			CM:PrintChat(format("mount -> |cffFFFF00%d|r %s", displayID, GetSpellLink(spellID)))
 		end
 	end
 end
@@ -244,7 +254,7 @@ function CM:MorphMountClassic(unit, displayID, spellID, override)
 	local morph = self:CanMorph(override)
 	if morph and morph.mount then
 		if morph.mount(unit, displayID) then
-			CM:PrintChat(format("Morphed mount to |cffFFFF00%d|r %s", displayID, GetSpellLink(spellID)))
+			CM:PrintChat(format("mount -> |cffFFFF00%d|r %s", displayID, GetSpellLink(spellID)))
 		end
 	end
 end
@@ -285,22 +295,24 @@ function CM:GetDualWieldSlot(slot)
 	end
 end
 
-function CM.MorphItem(item)
+function CM:MorphItem(unit, item, silent)
 	local morph = CM:CanMorph()
 	if item and morph and morph.item then
 		local itemID, itemLink, equipLoc = CM:GetItemInfo(item)
 		local slotID = InvTypeToSlot[equipLoc]
 		if slotID then
 			slotID = CM:GetDualWieldSlot(slotID)
-			morph.item("player", slotID, itemID)
-			CM:PrintChat(format("Morphed |cffFFFF00%s|r to item |cff71D5FF%d:%d|r %s", CM.SlotNames[slotID], itemID, 0, itemLink))
+			morph.item(unit, slotID, itemID)
+			if not silent then
+				CM:PrintChat(format("|cffFFFF00%s|r -> item |cff71D5FF%d|r %s", CM.SlotNames[slotID], itemID, itemLink))
+			end
 		end
 	end
 end
 
 hooksecurefunc("HandleModifiedItemClick", CM.MorphItem)
 
-function CM:MorphItemBySource(unit, source)
+function CM:MorphItemBySource(unit, source, silent)
 	local morph = self:CanMorph()
 	if morph and morph.item then
 		local slotID = C_Transmog.GetSlotForInventoryType(source.invType)
@@ -309,7 +321,10 @@ function CM:MorphItemBySource(unit, source)
 		local itemText = itemLink:find("%[%]") and CM.ItemAppearance and CM.ItemAppearance[source.visualID] or itemLink
 		morph.item(unit, slotID, source.itemID, source.itemModID)
 		morph.update(unit)
-		self:PrintChat(format("Morphed |cffFFFF00%s|r to item |cff71D5FF%d:%d|r %s", CM.SlotNames[slotID], source.itemID, source.itemModID, itemText))
+		local fullItemId = source.itemID..(source.itemModID > 0 and ":"..source.itemModID or "")
+		if not silent then
+			self:PrintChat(format("|cffFFFF00%s|r -> item |cff71D5FF%s|r %s", CM.SlotNames[slotID], fullItemId, itemText))
+		end
 	end
 end
 
@@ -317,7 +332,7 @@ function CM:MorphEnchant(unit, slotID, visualID, enchantName)
 	local morph = self:CanMorph()
 	if morph and morph.enchant then
 		morph.enchant(unit, slotID, visualID)
-		self:PrintChat(format("Morphed |cffFFFF00%s|r to enchant |cff71D5FF%d|r %s", CM.SlotNames[slotID], visualID, enchantName))
+		self:PrintChat(format("|cffFFFF00%s|r -> enchant |cff71D5FF%d|r %s", CM.SlotNames[slotID], visualID, enchantName))
 	end
 end
 
@@ -326,15 +341,15 @@ function CM:MorphModel(unit, displayID, npcID, npcName, override)
 	if morph and morph.model then
 		morph.model(unit, displayID)
 		if npcID and npcName then
-			self:PrintChat(format("NPC |cffFFFF00%d|r, model |cff71D5FF%d|r, %s", npcID, displayID, npcName))
+			self:PrintChat(format("model -> |cff71D5FF%d|r (NPC |cffFFFF00%d|r %s)", displayID, npcID, npcName))
 		else
-			self:PrintChat(format("Model |cff71D5FF%d|r", displayID))
+			self:PrintChat(format("model -> |cff71D5FF%d|r", displayID))
 		end
 	end
 end
 
 -- Appearances
-function CM.MorphTransmogSet()
+function CM.MorphTransmogSet() -- retail
 	local morph = CM:CanMorph()
 	if morph and morph.item then
 		local setID = WardrobeCollectionFrame.SetsCollectionFrame.selectedSetID
@@ -346,11 +361,11 @@ function CM.MorphTransmogSet()
 			morph.item("player", CM.SlotNames[slotID], source.itemID, source.itemModID)
 		end
 		morph.update("player")
-		CM:PrintChat(format("Morphed to set |cff71D5FF%d: %s|r (%s)", setID, setInfo.name, setInfo.description or ""))
+		CM:PrintChat(format("itemset -> |cff71D5FF%d|r |cffFFFF00%s|r (%s)", setID, setInfo.name, setInfo.description or ""))
 	end
 end
 
-function CM.MorphTransmogItem(frame)
+function CM.MorphTransmogItem(frame) -- retail
 	local transmogType = WardrobeCollectionFrame.ItemsCollectionFrame.transmogType
 	local visualID = frame.visualInfo.visualID
 
@@ -374,21 +389,18 @@ function CM.MorphTransmogItem(frame)
 	end
 end
 
-function CM:MorphItemSet(itemSetID, override)
+function CM:MorphItemSet(itemSetID, override) -- classic
 	local morph = CM:CanMorph(override)
 	if morph then
 		local itemset = self:GetFileData().Classic.ItemSet[itemSetID]
 		if morph.item and itemset then
-			-- reset gear to naked first
-			-- todo: only do it for gear item sets instead of weapon sets
-			for _, slot in pairs(GearSlots) do
-				morph.item("player", slot, 0)
-			end
+			self:Undress() -- todo: only undress gear for gear item sets instead of weapon sets
 			for slot, item in pairs(itemset) do
 				if type(slot) == "number" then -- ignore "name" key
 					SetItem(slot, item)
 				end
 			end
+			CM:PrintChat(format("itemset -> |cff71D5FF%d|r |cffFFFF00%s|r", itemSetID, itemset.name))
 		end
 	end
 end

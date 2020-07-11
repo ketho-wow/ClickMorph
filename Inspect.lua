@@ -35,15 +35,9 @@ end
 function f:InitializeInspect()
 	InspectModelFrame:HookScript("OnMouseUp", function()
 		if IsAltKeyDown() then
-			CM:ResetMorph()
 			local unit = InspectFrame.unit
-			local class = UnitClassBase(unit)
-			local fullName = GetUnitName(unit, true)
-			local unitLink
-			local hex = select(4, GetClassColor(class))
-			local unitLink = "|c"..TEXT_MODE_A_STRING_DEST_UNIT:format(hex, UnitGUID(unit), fullName, fullName)
-			CM:PrintChat(format("Morphing to %s", unitLink))
 			local items = {}
+			CM:Undress()
 
 			if CM.isClassic then
 				for _, slotID in pairs(InvSlotsOrder) do
@@ -78,13 +72,18 @@ function f:InitializeInspect()
 			end)
 			if CM.isClassic then
 				for _, v in pairs(items) do
-					CM.MorphItem(v[2])
+					CM:MorphItem("player", v[2], true)
 				end
 			else
 				for _, v in pairs(items) do
-					CM:MorphItemBySource("player", v[2])
+					CM:MorphItemBySource("player", v[2], true)
 				end
 			end
+			local class = UnitClassBase(unit)
+			local fullName = GetUnitName(unit, true)
+			local hex = select(4, GetClassColor(class))
+			local unitLink = "|c"..TEXT_MODE_A_STRING_DEST_UNIT:format(hex, UnitGUID(unit), fullName, fullName)
+			CM:PrintChat(format("items -> %s", unitLink))
 		end
 	end)
 end
