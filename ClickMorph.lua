@@ -297,7 +297,8 @@ end
 
 function CM:MorphItem(unit, item, silent)
 	local morph = CM:CanMorph()
-	if item and morph and morph.item then
+	-- nobody wants to morph while looting and it would interfere with dkp addons
+	if item and morph and morph.item and not LootFrame:IsShown() then
 		local itemID, itemLink, equipLoc = CM:GetItemInfo(item)
 		local slotID = InvTypeToSlot[equipLoc]
 		if slotID then
@@ -310,7 +311,9 @@ function CM:MorphItem(unit, item, silent)
 	end
 end
 
-hooksecurefunc("HandleModifiedItemClick", CM.MorphItem)
+hooksecurefunc("HandleModifiedItemClick", function(item)
+	CM:MorphItem("player", item)
+end)
 
 function CM:MorphItemBySource(unit, source, silent)
 	local morph = self:CanMorph()

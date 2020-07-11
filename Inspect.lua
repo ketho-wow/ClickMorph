@@ -80,8 +80,8 @@ function f:InitializeInspect()
 				end
 			end
 			local class = UnitClassBase(unit)
-			local fullName = GetUnitName(unit, true)
 			local hex = select(4, GetClassColor(class))
+			local fullName = GetUnitName(unit, true)
 			local unitLink = "|c"..TEXT_MODE_A_STRING_DEST_UNIT:format(hex, UnitGUID(unit), fullName, fullName)
 			CM:PrintChat(format("items -> %s", unitLink))
 		end
