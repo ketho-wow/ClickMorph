@@ -214,8 +214,9 @@ function CM:AtlasLootClassic()
 	-- favourites; most functions are local so its kinda difficult to hook into properly
 	local Favourites = AtlasLoot.Addons:GetAddon("Favourites")
 	hooksecurefunc(Favourites.GUI, "Create", function()
+		local content = Favourites.GUI.frame.content
 		-- scrollframe items
-		hooksecurefunc(Favourites.GUI.frame.content.scrollFrame, "SetItems", function(sf)
+		hooksecurefunc(content.scrollFrame, "SetItems", function(sf)
 			for _, btn in pairs(sf.itemButtons) do
 				if not btn.clickmorph then
 					HookAtlasLootButton(btn)
@@ -224,16 +225,14 @@ function CM:AtlasLootClassic()
 			end
 		end)
 		-- equipment slots
-		for _, slot in pairs(Favourites.GUI.frame.content.slotFrame.slots) do
+		for _, slot in pairs(content.slotFrame.slots) do
 			HookAtlasLootButton(slot)
 		end
 		-- model preview
-		Favourites.GUI.frame.content.slotFrame.modelFrame:HookScript("OnMouseUp", function()
-			if IsAtlasLootKeybind() then
+		content.slotFrame.modelFrame:HookScript("OnMouseUp", function()
+			if IsAtlasLootKeybind() and self:CanMorph() then
 				self:Undress()
-				local Favourites = AtlasLoot.Addons:GetAddon("Favourites")
-				local slots = Favourites.GUI.frame.content.slotFrame.slots
-				for _, slot in pairs(slots) do
+				for _, slot in pairs(content.slotFrame.slots) do
 					if slot.ItemID then
 						self:MorphItem("player", slot.ItemID, true)
 					end
