@@ -7,4 +7,5 @@ externals:
   Libs/LibStub: https://repos.wowace.com/wow/libstub/trunk
 
 ignore:
-    - README.md
+  - README.md
+  - Libs/LibStub/tests
