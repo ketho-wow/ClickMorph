@@ -295,10 +295,18 @@ function CM:GetDualWieldSlot(slot)
 	end
 end
 
+local function IsLooting()
+	if ElvLootSlot1 then -- elvui
+		return ElvLootSlot1:IsShown()
+	else
+		return LootFrame:IsShown()
+	end
+end
+
 function CM:MorphItem(unit, item, silent)
 	local morph = CM:CanMorph()
 	-- nobody wants to morph while looting and it would interfere with dkp addons
-	if item and morph and morph.item and not LootFrame:IsShown() then
+	if item and morph and morph.item and not IsLooting() then
 		local itemID, itemLink, equipLoc = CM:GetItemInfo(item)
 		local slotID = InvTypeToSlot[equipLoc]
 		if slotID then
