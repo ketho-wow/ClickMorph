@@ -70,8 +70,10 @@ function iMorphV1:PLAYER_MOUNT_DISPLAY_CHANGED()
 	local state = ClickMorph_iMorphV1.state
 	if not IMorphInfo or not state then return end
 
-	if state.scale then
-		SetScale(state.scale)
-	end
+	C_Timer.After(.1, function()
+		if state.scale then
+			SetScale(state.scale)
+		end
+	end)
 end
 
