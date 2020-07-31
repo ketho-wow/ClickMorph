@@ -6,6 +6,7 @@ iMorphV1 = CreateFrame("Frame")
 iMorphV1:RegisterEvent("PLAYER_ENTERING_WORLD")
 iMorphV1:RegisterEvent("PLAYER_LOGOUT")
 iMorphV1:RegisterEvent("ADDON_LOADED")
+iMorphV1:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
 iMorphV1:SetScript("OnEvent", function(self, event, ...)
 	self[event](self, event, ...)
 end)
@@ -63,3 +64,14 @@ function iMorphV1:Remorph()
 		--ClickMorph:PrintChat("Remorphed")
 	end)
 end
+
+-- mount/dismount
+function iMorphV1:PLAYER_MOUNT_DISPLAY_CHANGED()
+	local state = ClickMorph_iMorphV1.state
+	if not IMorphInfo or not state then return end
+
+	if state.scale then
+		SetScale(state.scale)
+	end
+end
+
