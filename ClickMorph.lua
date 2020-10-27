@@ -377,19 +377,18 @@ function CM.MorphTransmogSet() -- retail
 end
 
 function CM.MorphTransmogItem(frame) -- retail
-	local transmogType = WardrobeCollectionFrame.ItemsCollectionFrame.transmogType
+	local loc = WardrobeCollectionFrame.ItemsCollectionFrame.transmogLocation
 	local visualID = frame.visualInfo.visualID
 
-	if transmogType == LE_TRANSMOG_TYPE_ILLUSION then
-		local activeSlot = WardrobeCollectionFrame.ItemsCollectionFrame.activeSlot
-		local slotID = GetInventorySlotInfo(activeSlot)
+	if loc.transmogType == Enum.TransmogType.Illusion then
+		local slotID = GetInventorySlotInfo(loc.slotID)
 		local name
 		if frame.visualInfo.sourceID then
 			local link = select(3, C_TransmogCollection.GetIllusionSourceInfo(frame.visualInfo.sourceID))
 			name = #link > 0 and link
 		end
 		CM:MorphEnchant("player", slotID, visualID, name or CM.ItemVisuals[visualID])
-	elseif transmogType == LE_TRANSMOG_TYPE_APPEARANCE then
+	elseif loc.transmogType == Enum.TransmogType.Appearance then
 		local sources = WardrobeCollectionFrame_GetSortedAppearanceSources(visualID)
 		for idx, source in pairs(sources) do
 			-- get the index the arrow is pointing at
