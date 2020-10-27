@@ -195,4 +195,10 @@ ClickMorphData.Live.ItemVisuals = {
 	[454] = "7fx_weaponenchant_energyshadow",
 	[465] = "mongooseglow_high",
 	[483] = "7fx_weaponenchant_nightmare",
+	[485] = "7fx_weaponenchant_nightmare",
+	[491] = "shaman_fire",
+	[500] = "shaman_fire",
+	[501] = "shaman_fire",
+	[502] = "redglow_low",
+	[503] = "whiteglow_high",
 }
