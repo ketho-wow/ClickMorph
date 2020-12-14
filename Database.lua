@@ -1,5 +1,7 @@
 local CM = ClickMorph
-local db 
+if CM.isClassic then return end
+
+local db
 CM.db_callbacks = {}
 
 local defaults = {

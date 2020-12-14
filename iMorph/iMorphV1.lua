@@ -1,5 +1,5 @@
 local CM = ClickMorph
-if not CM.isClassic then return end
+if true then return end
 
 iMorphV1 = CreateFrame("Frame")
 

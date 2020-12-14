@@ -1,4 +1,5 @@
 local CM = ClickMorph
+if CM.isClassic then return end
 local StdUi = LibStub("StdUi")
 local version = format("|cff71D5FF%s|r", GetAddOnMetadata("ClickMorph", "Version"))
 local gui

@@ -5,7 +5,9 @@ CM.project = CM.isClassic and "Classic" or "Live"
 
 -- rip clickmorph
 if CM.isClassic then
+	print("ClickMorph no longer works since patch 1.13.6")
 	DisableAddOn("ClickMorph", true)
+	DisableAddOn("ClickMorphData", true)
 	return
 end
 

@@ -19,8 +19,6 @@ jobs:
 
       - uses: BigWigsMods/packager@master
         with:
-          args: release.sh -g 1.13.3
+          args: -g classic
 
       - uses: BigWigsMods/packager@master
-        with:
-          args: release.sh

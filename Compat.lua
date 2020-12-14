@@ -1,4 +1,5 @@
 local CM = ClickMorph
+if CM.isClassic then return end
 
 local addons = {
 	"MogIt",
