@@ -2,6 +2,13 @@ ClickMorph = {}
 local CM = ClickMorph
 CM.isClassic = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
 CM.project = CM.isClassic and "Classic" or "Live"
+
+-- rip clickmorph
+if CM.isClassic then
+	DisableAddOn("ClickMorph", true)
+	return
+end
+
 local FileData
 
 -- inventory type -> equipment slot -> slot name
