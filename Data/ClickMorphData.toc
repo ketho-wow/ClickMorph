@@ -1,10 +1,6 @@
-#@retail@
-## Interface: 90001
-#@end-retail@
-#@non-retail@
-# ## Interface: 11305
-#@end-non-retail@
-## Version: 9.0.1.36322
+## Interface-Retail: 90005
+## Interface-Classic: 11307
+## Interface-BCC: 20501
 ## Title: ClickMorphData
 ## Author: Ketho
 ## Notes: Load on Demand FileData
