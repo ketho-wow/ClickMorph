@@ -1,5 +1,5 @@
 local CM = ClickMorph
-if not CM.isClassic then return end
+if CM.isRetail then return end
 local MountIDs
 
 function CM:GetClassicMountIDs()

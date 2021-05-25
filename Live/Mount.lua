@@ -1,5 +1,5 @@
 local CM = ClickMorph
-if CM.isClassic then return end
+if not CM.isRetail then return end
 
 local f = CreateFrame("Frame")
 local active

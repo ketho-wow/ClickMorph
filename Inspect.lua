@@ -39,7 +39,7 @@ function f:InitializeInspect()
 			local items = {}
 			CM:Undress()
 
-			if CM.isClassic then
+			if not CM.isRetail then
 				for _, slotID in pairs(InvSlotsOrder) do
 					local itemLink = GetInventoryItemLink(InspectFrame.unit, slotID)
 					if itemLink then
@@ -70,7 +70,7 @@ function f:InitializeInspect()
 			sort(items, function(a, b)
 				return a[1] < b[1]
 			end)
-			if CM.isClassic then
+			if not CM.isRetail then
 				for _, v in pairs(items) do
 					CM:MorphItem("player", v[2], true)
 				end
