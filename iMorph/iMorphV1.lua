@@ -20,7 +20,7 @@ end
 
 -- imorph seems to already maintain morph when zoning between map instances
 -- cant immediately remorph on initial login since IMorphInfo is not yet loaded, even after relog
--- also IMorphInfo gets wiped between exiting the game / uninjecting 
+-- also IMorphInfo gets wiped between exiting the game / uninjecting
 function iMorphV1:PLAYER_ENTERING_WORLD(event, isInitialLogin, isReloadingUi)
 	--[[
 	if isInitialLogin then

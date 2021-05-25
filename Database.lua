@@ -1,5 +1,5 @@
 local CM = ClickMorph
-local db 
+local db
 CM.db_callbacks = {}
 
 local defaults = {

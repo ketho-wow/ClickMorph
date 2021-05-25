@@ -61,7 +61,7 @@ function f:InitializeInspect()
 							-- * items with suffixes like "of the Fireflash", mostly with itemModID 5
 							-- * class specific gear, like 157685:0 [Spellsculptor's Leggings]
 							CM:PrintChat(format("Error: Could not find sourceID for inventorySlot %d, itemID %d:%d, %s",
-								slot, itemID, itemModID, itemLink), 1, 1, 0)
+								slotID, itemID, itemModID, itemLink), 1, 1, 0)
 						end
 					end
 				end

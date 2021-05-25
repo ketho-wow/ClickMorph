@@ -24,7 +24,7 @@ function CM:CreateGUI()
 
 	local race_dd = StdUi:Dropdown(gui, 100, 20, races, select(3, UnitRace("player")))
 	race_dd:SetPoint("TOPLEFT", 20, -60)
-	
+
 	local genders = {
 		{value = 1, text = MALE},
 		{value = 2, text = FEMALE},
