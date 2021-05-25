@@ -25,7 +25,7 @@ function CM:CreateGUI()
 
 	local race_dd = StdUi:Dropdown(gui, 100, 20, races, select(3, UnitRace("player")))
 	race_dd:SetPoint("TOPLEFT", 20, -60)
-	
+
 	local genders = {
 		{value = 1, text = MALE},
 		{value = 2, text = FEMALE},
@@ -87,7 +87,7 @@ function CM:CreateGUI()
 	end
 
 	-- mount
-	local mountNames = self.isClassic and self:GetClassicMountIDs() or {}
+	local mountNames = self.isRetail and {} or self:GetClassicMountIDs()
 	local mount_eb = StdUi:Dropdown(gui, 210, 20, mountNames)
 	StdUi:GlueBelow(mount_eb, model_eb, 0, -30, "LEFT")
 

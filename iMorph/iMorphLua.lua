@@ -1,5 +1,5 @@
 local CM = ClickMorph
-if true then return end
+if CM.isRetail then return end
 
 iMorphLua = CreateFrame("Frame")
 iMorphLua.debug = false
@@ -154,7 +154,7 @@ function iMorphLua:UNIT_MODEL_CHANGED(unit)
 					print("morphed back to humanoid form", form, formid)
 					Morph(state.morph)
 				end
-			-- when model is the actual player model and 
+			-- when model is the actual player model and
 			--  when you are the initial race and sex it shouldnt trigger a remorph when manually morphing
 			elseif PlayerModelFD[fileID] and player.playermodel == fileID and not isManuallyMorphing then
 				if state.morph then
@@ -169,7 +169,6 @@ function iMorphLua:UNIT_MODEL_CHANGED(unit)
 						skipevent = false
 					end
 				end
-			
 			end
 		end
 		isManuallyMorphing = false

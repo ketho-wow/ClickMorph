@@ -1,16 +1,7 @@
 ClickMorph = {}
 local CM = ClickMorph
-CM.isClassic = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
-CM.project = CM.isClassic and "Classic" or "Live"
-
--- rip clickmorph
-if CM.isClassic then
-	print("ClickMorph no longer works since patch 1.13.6")
-	DisableAddOn("ClickMorph", true)
-	DisableAddOn("ClickMorphData", true)
-	return
-end
-
+CM.isRetail = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
+CM.project = CM.isRetail and "Live" or "Classic"
 local FileData
 
 -- inventory type -> equipment slot -> slot name
@@ -112,7 +103,7 @@ function CM:CanMorph(override)
 				return morpher
 			end
 		end
-		local name = CM.isClassic and "iMorph" or "jMorph"
+		local name = CM.isRetail and "jMorph" or "iMorph"
 		self:PrintChat("Could not find |cffFFFF00"..name.."|r. Make sure it is loaded before you use ClickMorph.", 1, 1, 0)
 	end
 end
@@ -234,7 +225,7 @@ function CM:ResetMorph()
 	end
 end
 
-function CM:Undress()
+function CM:Undress(unit)
 	local morph = self:CanMorph(true)
 	if morph and morph.item then
 		for _, invSlot in pairs(GearSlots) do -- excludes weapons

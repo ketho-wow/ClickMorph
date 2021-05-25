@@ -129,7 +129,7 @@ local function UpdateRimvHooks(frame)
 end
 
 function CM:rIngameModelViewer()
-	if self.isClassic then -- missing model in classic
+	if not self.isRetail then -- missing model in classic
 		rIngameModelViewerMurlocButton:SetDisplayInfo(31)
 	end
 	rIngameModelViewerMurlocButton:HookScript("OnMouseDown", function()

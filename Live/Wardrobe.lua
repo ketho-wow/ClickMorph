@@ -1,6 +1,6 @@
 -- the unlocked wardrobe is kind of buggy and messy
 local CM = ClickMorph
-if CM.isClassic then return end
+if not CM.isRetail then return end
 
 local db
 local cache = {}
@@ -227,14 +227,15 @@ function f:QueryData()
 	end
 
 	sort(illusions, function(a, b)
-		return a.visualID > b.visualID 
+		return a.visualID > b.visualID
 	end)
-	
+
 	return sources, illusions
 end
 
 function f:HookWardrobe()
-	local searchAppearanceIDs, activeSearch = {}
+	local searchAppearanceIDs = {}
+	local activeSearch
 
 	-- appearances
 	function C_TransmogCollection.GetCategoryAppearances(categoryID)

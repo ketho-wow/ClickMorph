@@ -1,6 +1,4 @@
 local CM = ClickMorph
-if CM.isClassic then return end
-
 local db
 CM.db_callbacks = {}
 

@@ -40,7 +40,7 @@ function f:InitializeInspect()
 			local items = {}
 			CM:Undress()
 
-			if CM.isClassic then
+			if not CM.isRetail then
 				for _, slotID in pairs(InvSlotsOrder) do
 					local itemLink = GetInventoryItemLink(InspectFrame.unit, slotID)
 					if itemLink then
@@ -62,7 +62,7 @@ function f:InitializeInspect()
 							-- * items with suffixes like "of the Fireflash", mostly with itemModID 5
 							-- * class specific gear, like 157685:0 [Spellsculptor's Leggings]
 							CM:PrintChat(format("Error: Could not find sourceID for inventorySlot %d, itemID %d:%d, %s",
-								slot, itemID, itemModID, itemLink), 1, 1, 0)
+								slotID, itemID, itemModID, itemLink), 1, 1, 0)
 						end
 					end
 				end
@@ -71,7 +71,7 @@ function f:InitializeInspect()
 			sort(items, function(a, b)
 				return a[1] < b[1]
 			end)
-			if CM.isClassic then
+			if not CM.isRetail then
 				for _, v in pairs(items) do
 					CM:MorphItem("player", v[2], true)
 				end

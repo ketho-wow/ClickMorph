@@ -1,5 +1,5 @@
 local CM = ClickMorph
-if CM.isClassic then return end
+if not CM.isRetail then return end
 
 local f = CreateFrame("Frame")
 local active
@@ -46,7 +46,8 @@ end
 
 function f:UnlockMounts()
 	local mountIDs = C_MountJournal.GetMountIDs()
-	local searchMountIDs, activeSearch = {}
+	local searchMountIDs = {}
+	local activeSearch
 	-- sort alphabetically
 	sort(mountIDs, function(a, b)
 		local name1, _, _, _, _, _, isFavorite1 = C_MountJournal.GetMountInfoByID(a)
