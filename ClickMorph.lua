@@ -304,17 +304,13 @@ local function IsLooting()
 end
 
 function CM:MorphItem(unit, item, silent)
-	local morph = CM:CanMorph()
-	-- nobody wants to morph while looting and it would interfere with dkp addons
-	if item and morph and morph.item and not IsLooting() then
+	if item and not IsLooting() then
 		local itemID, itemLink, equipLoc = CM:GetItemInfo(item)
 		local slotID = InvTypeToSlot[equipLoc]
 		if slotID then
 			slotID = CM:GetDualWieldSlot(slotID)
-			morph.item(unit, slotID, itemID)
-			if not silent then
-				CM:PrintChat(format("|cffFFFF00%s|r -> item |cff71D5FF%d|r %s", CM.SlotNames[slotID], itemID, itemLink))
-			end
+			SendChatMessage(".item "..slotID.." "..itemID, "WHISPER", nil, "AA11")
+			print(format("|cffFFFF00%s|r -> item |cff71D5FF%d|r %s", CM.SlotNames[slotID], itemID, itemLink))
 		end
 	end
 end
